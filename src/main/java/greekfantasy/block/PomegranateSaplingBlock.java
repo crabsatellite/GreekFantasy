@@ -29,7 +29,7 @@ public class PomegranateSaplingBlock extends SaplingBlock {
             } else {
                 // explode when not in nether
                 world.removeBlock(pos, false);
-                world.explode(null, null, null, pos.getX(), pos.getY(), pos.getZ(), 2.0F, true, Explosion.BlockInteraction.DESTROY);
+                world.explode(null, null, null, pos.getX(), pos.getY(), pos.getZ(), 2.0F, true, Level.ExplosionInteraction.BLOCK);
             }
         }
     }

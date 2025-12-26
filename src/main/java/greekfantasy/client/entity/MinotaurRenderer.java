@@ -1,7 +1,8 @@
 package greekfantasy.client.entity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Vector3f;
+import org.joml.Vector3f;
+import com.mojang.math.Axis;
 import greekfantasy.GreekFantasy;
 import greekfantasy.client.entity.model.MinotaurModel;
 import greekfantasy.entity.monster.Minotaur;
@@ -20,7 +21,7 @@ public class MinotaurRenderer<T extends Minotaur> extends HumanoidMobRenderer<T,
     protected void scale(final T entity, PoseStack poseStack, float partialTick) {
         // if the entity is charging, rotate the entity forward
         if (entity.isCharging()) {
-            poseStack.mulPose(Vector3f.XP.rotationDegrees(9.0F));
+            poseStack.mulPose(Axis.XP.rotationDegrees(9.0F));
         }
     }
 

@@ -34,7 +34,7 @@ public class ConchItem extends Item {
         if (!level.isClientSide()) {
             // raytrace
             final BlockHitResult raytrace = ThunderboltItem.raytraceFromEntity(player, 32.0F, ClipContext.Fluid.SOURCE_ONLY);
-            BlockPos hitPos = new BlockPos(raytrace.getLocation());
+            BlockPos hitPos = BlockPos.containing(raytrace.getLocation());
             // attempt to place water at the hit position
             if (raytrace.getType() == HitResult.Type.BLOCK) {
                 // locate block and fluid at this position
@@ -95,7 +95,7 @@ public class ConchItem extends Item {
             return true;
         } else {
             // destroy the block that's already here if it's replaceable
-            if (!level.isClientSide() && hitBlock.canBeReplaced(Fluids.WATER) && !hitBlock.getMaterial().isLiquid()) {
+            if (!level.isClientSide() && hitBlock.canBeReplaced(Fluids.WATER) && !hitBlock.getFluidState().isEmpty() == false) {
                 level.destroyBlock(hitPos, true);
             }
             // finally, attempt to place water directly

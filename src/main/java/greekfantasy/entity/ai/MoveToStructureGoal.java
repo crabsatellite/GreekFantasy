@@ -1,4 +1,5 @@
 package greekfantasy.entity.ai;
+import net.minecraft.core.registries.Registries;
 
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.core.BlockPos;
@@ -52,7 +53,7 @@ public class MoveToStructureGoal extends RandomStrollGoal {
                                ResourceLocation structureId,
                                RandomPosFactory posFactory) {
         this(mob, speedModifier, rangeInSections, distanceXZ, distanceY,
-                createHolder(mob.level.registryAccess(), structureId),
+                createHolder(mob.level().registryAccess(), structureId),
                 posFactory);
     }
 
@@ -84,7 +85,7 @@ public class MoveToStructureGoal extends RandomStrollGoal {
 
     @Override
     public boolean canUse() {
-        ServerLevel level = (ServerLevel) this.mob.level;
+        ServerLevel level = (ServerLevel) this.mob.level();
         BlockPos blockpos = this.mob.blockPosition();
         if (isNearStructure(structureStart, blockpos, distanceXZ, distanceY)) {
             return false;
@@ -122,15 +123,15 @@ public class MoveToStructureGoal extends RandomStrollGoal {
         Vec3 vec = randomPosFactory.apply(this.mob, distanceXZ, distanceY);
         if (vec != null) {
             // if vec is within structure, use vec
-            BlockPos pos = new BlockPos(vec);
+            BlockPos pos = BlockPos.containing(vec);
             if (isInStructure(structureStart, pos)) {
                 return vec;
             }
             // determine center position of nearest structure
             BlockPos center = structureStart.getBoundingBox().getCenter();
             if(!(this.mob.getNavigation() instanceof WaterBoundPathNavigation)) {
-                int y = this.mob.level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, center.getX(), center.getZ());
-                center = new BlockPos(center.getX(), y, center.getZ());
+                int y = this.mob.level().getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, center.getX(), center.getZ());
+                center = BlockPos.containing(center.getX(), y, center.getZ());
             }
             // choose a random position towards the center of the structure
             Vec3 towardsVec = DefaultRandomPos.getPosTowards(mob, distanceXZ, distanceY, Vec3.atBottomCenterOf(center), Math.PI / 2.0D);
@@ -173,7 +174,7 @@ public class MoveToStructureGoal extends RandomStrollGoal {
     }
 
     public static Holder<Structure> createHolder(final RegistryAccess access, final ResourceLocation structureId) {
-        Structure csf = access.registryOrThrow(Registry.STRUCTURE_REGISTRY).get(structureId);
+        Structure csf = access.registryOrThrow(Registries.STRUCTURE).get(structureId);
         if (null == csf) {
             throw new IllegalArgumentException("Failed to create holder for unknown structure '" + structureId + "'");
         }

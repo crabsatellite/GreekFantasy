@@ -1,4 +1,5 @@
 package greekfantasy.util;
+import net.minecraft.core.registries.Registries;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -29,7 +30,7 @@ public class BronzeScrapLootModifier extends LootModifier {
     public static final Supplier<Codec<BronzeScrapLootModifier>> CODEC_SUPPLIER = Suppliers.memoize(() -> RecordCodecBuilder.create(inst ->
             codecStart(inst)
                     .and(Codec.STRING.listOf().fieldOf("paths").forGetter(BronzeScrapLootModifier::getPaths))
-                    .and(TagKey.codec(Registry.ITEM_REGISTRY).fieldOf("item_tag").forGetter(BronzeScrapLootModifier::getItemTag))
+                    .and(TagKey.codec(Registries.ITEM).fieldOf("item_tag").forGetter(BronzeScrapLootModifier::getItemTag))
                     .and(IntProvider.CODEC.fieldOf("count").forGetter(BronzeScrapLootModifier::getCount))
                     .apply(inst, BronzeScrapLootModifier::new)));
 

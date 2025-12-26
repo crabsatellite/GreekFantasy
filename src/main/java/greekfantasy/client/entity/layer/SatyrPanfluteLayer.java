@@ -1,13 +1,15 @@
 package greekfantasy.client.entity.layer;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Vector3f;
+import org.joml.Vector3f;
+import com.mojang.math.Axis;
 import greekfantasy.GFRegistry;
 import greekfantasy.client.entity.model.SatyrModel;
 import greekfantasy.entity.Satyr;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -32,12 +34,12 @@ public class SatyrPanfluteLayer<T extends Satyr> extends RenderLayer<T, SatyrMod
             poseStack.pushPose();
             // transforms
             this.getParentModel().translateToHand(HumanoidArm.RIGHT, poseStack);
-            poseStack.mulPose(Vector3f.XP.rotationDegrees(-90.0F));
-            poseStack.mulPose(Vector3f.YP.rotationDegrees(180.0F));
+            poseStack.mulPose(Axis.XP.rotationDegrees(-90.0F));
+            poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
             poseStack.translate(1.0F / 16.0F, 2.0F / 16.0F, -10.0F / 16.0F);
             // render the item stack
-            Minecraft.getInstance().getItemRenderer().renderStatic(entity, panflute, ItemTransforms.TransformType.THIRD_PERSON_RIGHT_HAND,
-                    false, poseStack, multiBufferSource, entity.level, packedLight, OverlayTexture.NO_OVERLAY, 0);
+            Minecraft.getInstance().getItemRenderer().renderStatic(entity, panflute, ItemDisplayContext.THIRD_PERSON_RIGHT_HAND,
+                    false, poseStack, multiBufferSource, entity.level(), packedLight, OverlayTexture.NO_OVERLAY, 0);
             // finish rendering
             poseStack.popPose();
         }

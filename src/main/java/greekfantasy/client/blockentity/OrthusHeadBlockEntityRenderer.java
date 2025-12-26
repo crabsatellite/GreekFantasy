@@ -15,6 +15,7 @@ import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 
 public class OrthusHeadBlockEntityRenderer extends MobHeadBlockEntityRenderer {
@@ -65,12 +66,12 @@ public class OrthusHeadBlockEntityRenderer extends MobHeadBlockEntityRenderer {
         }
 
         @Override
-        public void renderByItem(ItemStack item, ItemTransforms.TransformType transform, PoseStack poseStack, MultiBufferSource bufferSource, int combinedLightIn, int combinedOverlayIn) {
+        public void renderByItem(ItemStack item, ItemDisplayContext transform, PoseStack poseStack, MultiBufferSource bufferSource, int light, int overlay) {
             poseStack.pushPose();
             poseStack.translate(0.0F, 0.0F, -2.0F / 16.0F);
             poseStack.scale(-1.0F, -1.0F, 1.0F);
             VertexConsumer vertexBuilder = ItemRenderer.getFoilBufferDirect(bufferSource, this.model.renderType(TEXTURE), false, item.hasFoil());
-            model.renderToBuffer(poseStack, vertexBuilder, combinedLightIn, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+            model.renderToBuffer(poseStack, vertexBuilder, light, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
             poseStack.popPose();
         }
     }

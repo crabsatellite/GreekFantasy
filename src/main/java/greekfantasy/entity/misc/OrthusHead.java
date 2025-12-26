@@ -14,7 +14,8 @@ public class OrthusHead extends ItemEntity {
     }
 
     public OrthusHead(Level level, double x, double y, double z, ItemStack itemStack) {
-        this(level, x, y, z, itemStack, level.random.nextDouble() * 0.2D - 0.1D, 0.2D, level.random.nextDouble() * 0.2D - 0.1D);
+        this(level, x, y, z, itemStack, level.random.nextDouble() * 0.2D - 0.1D, 0.2D,
+                level.random.nextDouble() * 0.2D - 0.1D);
     }
 
     public OrthusHead(Level level, double x, double y, double z, ItemStack itemStack, double dx, double dy, double dz) {
@@ -31,8 +32,9 @@ public class OrthusHead extends ItemEntity {
 
     @Override
     public void remove(Entity.RemovalReason reason) {
-        if (!this.level.isClientSide() && this.isOnFire()) {
-            SummonBossUtil.onOrthusHeadBurned(this.level, this.blockPosition(), this.getThrower());
+        if (!this.level().isClientSide() && this.isOnFire()) {
+            SummonBossUtil.onOrthusHeadBurned(this.level(), this.blockPosition(),
+                    this.getOwner() != null ? this.getOwner().getUUID() : null);
         }
         super.remove(reason);
     }

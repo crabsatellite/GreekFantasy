@@ -1,5 +1,7 @@
 package greekfantasy.entity;
+import net.minecraft.core.registries.Registries;
 
+import net.minecraft.tags.DamageTypeTags;
 import greekfantasy.GFRegistry;
 import greekfantasy.GreekFantasy;
 import greekfantasy.entity.boss.Charybdis;
@@ -80,10 +82,10 @@ public class Whirl extends WaterAnimal {
         super.aiStep();
 
         // remove if colliding with another whirl or a charybdis
-        final List<WaterAnimal> waterMobList = this.level.getEntitiesOfClass(WaterAnimal.class, this.getBoundingBox().inflate(1.0D),
+        final List<WaterAnimal> waterMobList = this.level().getEntitiesOfClass(WaterAnimal.class, this.getBoundingBox().inflate(1.0D),
                 e -> e != this && e.isAlive() && (e.getType() == GFRegistry.EntityReg.CHARYBDIS.get() || e.getType() == GFRegistry.EntityReg.WHIRL.get()));
         if (!waterMobList.isEmpty() && this.isAlive()) {
-            this.hurt(DamageSource.STARVE, this.getMaxHealth() * 2.0F);
+            this.hurt(damageSources().starve(), this.getMaxHealth() * 2.0F);
             return;
         }
 
@@ -94,11 +96,11 @@ public class Whirl extends WaterAnimal {
         }
 
         // remove nearby items
-        final List<ItemEntity> itemEntityList = this.level.getEntities(EntityType.ITEM, this.getBoundingBox().inflate(1.0D, 0.0F, 1.0D), e -> e.isInWaterOrBubble() && e.getY() < (this.getY() + this.getBbHeight()));
+        final List<ItemEntity> itemEntityList = this.level().getEntities(EntityType.ITEM, this.getBoundingBox().inflate(1.0D, 0.0F, 1.0D), e -> e.isInWaterOrBubble() && e.getY() < (this.getY() + this.getBbHeight()));
         for (final ItemEntity e : itemEntityList) {
             // check for trigger items
-            if (this.level instanceof ServerLevel && !e.getItem().isEmpty() && e.getItem().is(TRIGGER)) {
-                Charybdis.spawnCharybdis((ServerLevel) this.level, this);
+            if (this.level() instanceof ServerLevel && !e.getItem().isEmpty() && e.getItem().is(TRIGGER)) {
+                Charybdis.spawnCharybdis((ServerLevel) this.level(), this);
                 e.discard();
             }
             // start to remove items
@@ -119,7 +121,7 @@ public class Whirl extends WaterAnimal {
         super.tick();
 
         // spawn particles
-        if (this.level.isClientSide() && tickCount % 3 == 0 && this.isInWaterOrBubble()) {
+        if (this.level().isClientSide() && tickCount % 3 == 0 && this.isInWaterOrBubble()) {
             // spawn particles in spiral
             float maxY = this.getBbHeight() * 1.65F;
             float y = 0;
@@ -134,7 +136,7 @@ public class Whirl extends WaterAnimal {
                 float cosA = Mth.cos(a) * radius;
                 float sinA = Mth.sin(a) * radius;
                 //bubbles(posX + cosA, posY + y, posZ + sinA, 0.125D, 1);
-                level.addParticle(ParticleTypes.BUBBLE, posX + cosA, posY + y - (maxY * 0.4), posZ + sinA, 0.0D, 0.085D, 0.0D);
+                level().addParticle(ParticleTypes.BUBBLE, posX + cosA, posY + y - (maxY * 0.4), posZ + sinA, 0.0D, 0.085D, 0.0D);
                 y += dY;
             }
         }
@@ -169,13 +171,13 @@ public class Whirl extends WaterAnimal {
 
     @Override
     public boolean isInvulnerableTo(final DamageSource source) {
-        return source.isProjectile() || super.isInvulnerableTo(source);
+        return source.is(DamageTypeTags.IS_PROJECTILE) || super.isInvulnerableTo(source);
     }
 
     @Override
     protected void actuallyHurt(final DamageSource source, final float amountIn) {
         float amount = amountIn;
-        if (!source.isBypassMagic() && getAttractMobs()) {
+        if (!source.is(DamageTypeTags.BYPASSES_EFFECTS) && getAttractMobs()) {
             amount *= 0.25F;
         }
         super.actuallyHurt(source, amount);
@@ -274,7 +276,7 @@ public class Whirl extends WaterAnimal {
         protected void onCollideWith(Entity e) {
             // attack living entities, if enabled
             if (whirl.getAttractMobs() && e instanceof LivingEntity) {
-                e.hurt(DamageSource.mobAttack(entity), 1.0F);
+                e.hurt(entity.damageSources().mobAttack(entity), 1.0F);
             }
         }
     }

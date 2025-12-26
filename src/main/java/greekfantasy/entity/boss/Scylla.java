@@ -16,6 +16,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.BossEvent;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -107,7 +108,7 @@ public class Scylla extends WaterAnimal implements Enemy, RangedAttackMob, HasCu
 
     @Override
     public boolean isInvulnerableTo(DamageSource source) {
-        return source == DamageSource.IN_WALL || source == DamageSource.WITHER
+        return source.is(DamageTypes.IN_WALL) || source.is(DamageTypes.WITHER)
                 || source.getEntity() instanceof Charybdis || super.isInvulnerableTo(source);
     }
 
@@ -204,14 +205,14 @@ public class Scylla extends WaterAnimal implements Enemy, RangedAttackMob, HasCu
 
     @Override
     public void performRangedAttack(LivingEntity target, float distanceFactor) {
-        if (!level.isClientSide()) {
-            WaterSpell waterSpell = WaterSpell.create(level, this);
+        if (!level().isClientSide()) {
+            WaterSpell waterSpell = WaterSpell.create(level(), this);
             double dx = target.getX() - waterSpell.getX();
             double dy = target.getY(0.5D) - waterSpell.getY();
             double dz = target.getZ() - waterSpell.getZ();
             double dis = Math.sqrt(dx * dx + dz * dz);
             waterSpell.shoot(dx, dy + dis * waterSpell.getGravity() * 4.0D, dz, 1.6F, 1.0F);
-            this.level.addFreshEntity(waterSpell);
+            this.level().addFreshEntity(waterSpell);
         }
         this.playSound(SoundEvents.LLAMA_SPIT, 1.2F, 1.2F + this.random.nextFloat() * 0.2F);
     }

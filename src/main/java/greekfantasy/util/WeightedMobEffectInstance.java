@@ -1,4 +1,5 @@
 package greekfantasy.util;
+import net.minecraft.core.registries.Registries;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;

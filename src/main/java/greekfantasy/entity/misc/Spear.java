@@ -1,9 +1,11 @@
 package greekfantasy.entity.misc;
+import net.minecraft.core.registries.Registries;
 
 import greekfantasy.GFRegistry;
 import greekfantasy.GreekFantasy;
 import greekfantasy.item.SpearItem;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -69,7 +71,7 @@ public class Spear extends AbstractArrow {
         Entity entity = this.getOwner();
         if ((this.dealtDamage || this.isNoPhysics()) && entity != null) {
             if (loyaltyLevel > 0 && !this.shouldReturnToThrower()) {
-                if (!this.level.isClientSide && this.pickup == AbstractArrow.Pickup.ALLOWED) {
+                if (!this.level().isClientSide && this.pickup == AbstractArrow.Pickup.ALLOWED) {
                     this.spawnAtLocation(this.getPickupItem(), 0.1F);
                 }
 
@@ -79,7 +81,7 @@ public class Spear extends AbstractArrow {
                 Vec3 vector3d = new Vec3(entity.getX() - this.getX(), entity.getEyeY() - this.getY(),
                         entity.getZ() - this.getZ());
                 this.setPosRaw(this.getX(), this.getY() + vector3d.y * 0.015D * loyaltyLevel, this.getZ());
-                if (this.level.isClientSide()) {
+                if (this.level().isClientSide()) {
                     this.yOld = this.getY();
                 }
 
@@ -137,7 +139,7 @@ public class Spear extends AbstractArrow {
         }
 
         Entity thrower = getOwner();
-        DamageSource source = DamageSource.thrown(this, (thrower == null) ? this : thrower);
+        DamageSource source = this.damageSources().thrown(this, (thrower == null) ? this : thrower);
         SoundEvent sound = SoundEvents.TRIDENT_HIT;
         // attempt to set entity on fire
         if(setFire > 0) {
@@ -209,7 +211,7 @@ public class Spear extends AbstractArrow {
     }
 
     @Override
-    public Packet<?> getAddEntityPacket() {
+    public Packet<ClientGamePacketListener> getAddEntityPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
     }
 

@@ -5,7 +5,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
 /**
- * Adapted from https://github.com/gigaherz/ToolBelt under the following license:
+ * Adapted from https://github.com/gigaherz/ToolBelt under the following
+ * license:
  * <p>
  * Copyright (c) 2015, David Quintana <gigaherz@gmail.com>
  * All rights reserved.
@@ -21,7 +22,8 @@ import net.minecraft.util.Mth;
  * names of the contributors may be used to endorse or promote products
  * derived from this software without specific prior written permission.
  * <p>
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  * DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
@@ -50,9 +52,12 @@ public class NoteRadialMenuItem extends RadialMenuItem {
         this.note = note;
         // calculate color using the equation found in NoteParticle
         double noteColorData = ((float) Math.pow(2.0D, (double) (note) / 24.0D));
-        int noteColorR = (int) (255.0F * Math.max(0.0F, Mth.sin(((float) noteColorData + 0.0F) * ((float) Math.PI * 2F)) * 0.65F + 0.35F));
-        int noteColorG = (int) (255.0F * Math.max(0.0F, Mth.sin(((float) noteColorData + 0.33333334F) * ((float) Math.PI * 2F)) * 0.65F + 0.35F));
-        int noteColorB = (int) (255.0F * Math.max(0.0F, Mth.sin(((float) noteColorData + 0.6666667F) * ((float) Math.PI * 2F)) * 0.65F + 0.35F));
+        int noteColorR = (int) (255.0F
+                * Math.max(0.0F, Mth.sin(((float) noteColorData + 0.0F) * ((float) Math.PI * 2F)) * 0.65F + 0.35F));
+        int noteColorG = (int) (255.0F * Math.max(0.0F,
+                Mth.sin(((float) noteColorData + 0.33333334F) * ((float) Math.PI * 2F)) * 0.65F + 0.35F));
+        int noteColorB = (int) (255.0F * Math.max(0.0F,
+                Mth.sin(((float) noteColorData + 0.6666667F) * ((float) Math.PI * 2F)) * 0.65F + 0.35F));
         this.color = (0xff) << 24 | (noteColorR & 0xff) << 16 | (noteColorG & 0xff) << 8 | (noteColorB & 0xff);
     }
 
@@ -70,7 +75,7 @@ public class NoteRadialMenuItem extends RadialMenuItem {
         String textString = text.getString();
         float x = context.x - context.fontRenderer.width(textString) / 2.0f;
         float y = context.y - context.fontRenderer.lineHeight / 2.0F;
-        context.fontRenderer.drawShadow(context.poseStack, textString, x, y, color);
+        context.guiGraphics.drawString(context.fontRenderer, textString, (int) x, (int) y, color, true);
     }
 
     public void setHovered(boolean hovered) {

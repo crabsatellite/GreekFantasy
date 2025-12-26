@@ -12,6 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
@@ -158,7 +159,7 @@ public class Talos extends Automaton implements Enemy {
 
     @Override
     public boolean isInvulnerableTo(final DamageSource source) {
-        return source.isMagic() || source.getDirectEntity() instanceof AbstractArrow || super.isInvulnerableTo(source);
+        return source.is(DamageTypes.MAGIC) || source.getDirectEntity() instanceof AbstractArrow || super.isInvulnerableTo(source);
     }
 
     @Override

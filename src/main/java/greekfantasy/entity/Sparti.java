@@ -104,7 +104,7 @@ public class Sparti extends TamableAnimal implements RangedAttackMob {
         // lifespan
         if (this.limitedLifespan && --this.limitedLifeTicks <= 0) {
             this.limitedLifeTicks = 20;
-            hurt(DamageSource.STARVE, 2.0F);
+            hurt(this.damageSources().starve(), 2.0F);
         }
 
         // update spawn time
@@ -119,15 +119,15 @@ public class Sparti extends TamableAnimal implements RangedAttackMob {
         super.tick();
 
         // particles when spawning
-        if (level.isClientSide() && isSpawning()) {
+        if (level().isClientSide() && isSpawning()) {
             int i = Mth.floor(this.getX());
             int j = Mth.floor(this.getY() - (double) 0.2F);
             int k = Mth.floor(this.getZ());
-            BlockPos pos = new BlockPos(i, j, k);
-            BlockState blockstate = level.getBlockState(pos);
-            if (!level.isEmptyBlock(pos)) {
+            BlockPos pos = BlockPos.containing(i, j, k);
+            BlockState blockstate = level().getBlockState(pos);
+            if (!level().isEmptyBlock(pos)) {
                 for (int count = 0; count < 10; count++) {
-                    this.level.addParticle(new BlockParticleOption(ParticleTypes.BLOCK, blockstate).setPos(pos),
+                    this.level().addParticle(new BlockParticleOption(ParticleTypes.BLOCK, blockstate).setPos(pos),
                             this.getX() + ((double) this.random.nextFloat() - 0.5D) * (double) this.getBbWidth(),
                             this.getY() + 0.1D,
                             this.getZ() + ((double) this.random.nextFloat() - 0.5D) * (double) this.getBbWidth(),
@@ -157,8 +157,8 @@ public class Sparti extends TamableAnimal implements RangedAttackMob {
     public void setSpawning() {
         this.spawnTime = maxSpawnTime;
         this.refreshDimensions();
-        if (!level.isClientSide()) {
-            this.level.broadcastEntityEvent(this, SPAWN_EVENT);
+        if (!level().isClientSide()) {
+            this.level().broadcastEntityEvent(this, SPAWN_EVENT);
         }
     }
 

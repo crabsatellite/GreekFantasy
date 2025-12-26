@@ -4,7 +4,8 @@ package greekfantasy.client.entity.model;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Vector3f;
+import org.joml.Vector3f;
+import com.mojang.math.Axis;
 import greekfantasy.GreekFantasy;
 import greekfantasy.entity.Elpis;
 import net.minecraft.client.model.AgeableListModel;
@@ -122,7 +123,7 @@ public class ElpisModel<T extends Elpis> extends AgeableListModel<T> implements 
 	public void translateToHand(HumanoidArm arm, PoseStack poseStack) {
 		this.body.translateAndRotate(poseStack);
 		this.item.translateAndRotate(poseStack);
-		poseStack.mulPose(Vector3f.XP.rotation(-0.53633232F));
+		poseStack.mulPose(Axis.XP.rotation(-0.53633232F));
 		poseStack.scale(0.7F, 0.7F, 0.7F);
 	}
 

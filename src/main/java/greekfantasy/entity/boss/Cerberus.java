@@ -20,6 +20,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -97,7 +98,7 @@ public class Cerberus extends PathfinderMob implements Enemy {
         entity.yBodyRot = 0.0F;
         if (level instanceof ServerLevel serverLevel) {
             serverLevel.addFreshEntityWithPassengers(entity);
-            entity.finalizeSpawn(serverLevel, serverLevel.getCurrentDifficultyAt(new BlockPos(pos)), MobSpawnType.MOB_SUMMONED, null, null);
+            entity.finalizeSpawn(serverLevel, serverLevel.getCurrentDifficultyAt(BlockPos.containing(pos)), MobSpawnType.MOB_SUMMONED, null, null);
             // trigger spawn for nearby players
             for (ServerPlayer player : level.getEntitiesOfClass(ServerPlayer.class, entity.getBoundingBox().inflate(25.0D))) {
                 CriteriaTriggers.SUMMONED_ENTITY.trigger(player, entity);
@@ -165,7 +166,7 @@ public class Cerberus extends PathfinderMob implements Enemy {
         }
 
         // spawn particles
-        if (level.isClientSide() && this.isFiring()) {
+        if (level().isClientSide() && this.isFiring()) {
             spawnFireParticles();
         }
     }
@@ -180,7 +181,7 @@ public class Cerberus extends PathfinderMob implements Enemy {
 
     @Override
     public boolean isInvulnerableTo(final DamageSource source) {
-        return isSpawning() || source == DamageSource.IN_WALL || source == DamageSource.WITHER || super.isInvulnerableTo(source);
+        return isSpawning() || source.is(DamageTypes.IN_WALL) || source.is(DamageTypes.WITHER) || super.isInvulnerableTo(source);
     }
 
     @Override
@@ -283,8 +284,8 @@ public class Cerberus extends PathfinderMob implements Enemy {
     public void setSummoning(final boolean summoning) {
         setCerberusState(summoning ? SUMMONING : NONE);
         this.summonTime = summoning ? 1 : 0;
-        if (summoning && !level.isClientSide()) {
-            level.broadcastEntityEvent(this, SUMMON_CLIENT);
+        if (summoning && !level().isClientSide()) {
+            this.level().broadcastEntityEvent(this, SUMMON_CLIENT);
         }
     }
 
@@ -295,8 +296,8 @@ public class Cerberus extends PathfinderMob implements Enemy {
     public void setSpawning(final boolean spawning) {
         spawnTime = spawning ? MAX_SPAWN_TIME : 0;
         setCerberusState(spawning ? SPAWNING : NONE);
-        if (spawning && !level.isClientSide()) {
-            level.broadcastEntityEvent(this, SPAWN_CLIENT);
+        if (spawning && !level().isClientSide()) {
+            this.level().broadcastEntityEvent(this, SPAWN_CLIENT);
         }
     }
 
@@ -313,7 +314,7 @@ public class Cerberus extends PathfinderMob implements Enemy {
     // Fire-breathing particles
 
     public void spawnFireParticles() {
-        if (!level.isClientSide()) {
+        if (!level().isClientSide()) {
             return;
         }
         Vec3 lookVec = this.getLookAngle();
@@ -322,10 +323,10 @@ public class Cerberus extends PathfinderMob implements Enemy {
         final double radius = 0.75D;
 
         for (int i = 0; i < 5; i++) {
-            level.addParticle(ParticleTypes.FLAME,
-                    pos.x + (level.random.nextDouble() - 0.5D) * radius,
-                    pos.y + (level.random.nextDouble() - 0.5D) * radius,
-                    pos.z + (level.random.nextDouble() - 0.5D) * radius,
+            level().addParticle(ParticleTypes.FLAME,
+                    pos.x + (level().random.nextDouble() - 0.5D) * radius,
+                    pos.y + (level().random.nextDouble() - 0.5D) * radius,
+                    pos.z + (level().random.nextDouble() - 0.5D) * radius,
                     lookVec.x * motion * FIRE_RANGE,
                     lookVec.y * motion * 0.5D,
                     lookVec.z * motion * FIRE_RANGE);
@@ -333,7 +334,7 @@ public class Cerberus extends PathfinderMob implements Enemy {
     }
 
     private void addSpawningParticles(final ParticleOptions particle, final int count) {
-        if (!this.level.isClientSide()) {
+        if (!this.level().isClientSide()) {
             return;
         }
         final double x = this.getX();
@@ -342,13 +343,13 @@ public class Cerberus extends PathfinderMob implements Enemy {
         final double motion = 0.08D;
         final double radius = this.getBbWidth();
         for (int i = 0; i < count; i++) {
-            level.addParticle(particle,
-                    x + (level.random.nextDouble() - 0.5D) * radius,
-                    y + (level.random.nextDouble() - 0.5D) * radius,
-                    z + (level.random.nextDouble() - 0.5D) * radius,
-                    (level.random.nextDouble() - 0.5D) * motion,
+            level().addParticle(particle,
+                    x + (level().random.nextDouble() - 0.5D) * radius,
+                    y + (level().random.nextDouble() - 0.5D) * radius,
+                    z + (level().random.nextDouble() - 0.5D) * radius,
+                    (level().random.nextDouble() - 0.5D) * motion,
                     0.15D,
-                    (level.random.nextDouble() - 0.5D) * motion);
+                    (level().random.nextDouble() - 0.5D) * motion);
         }
     }
 
@@ -359,7 +360,7 @@ public class Cerberus extends PathfinderMob implements Enemy {
                 setSpawning(true);
                 break;
             case SUMMON_CLIENT:
-                this.level.playLocalSound(this.getX(), this.getY(), this.getZ(), SoundEvents.WOLF_HOWL, this.getSoundSource(), 1.1F, 0.9F + this.getRandom().nextFloat() * 0.2F, false);
+                this.level().playLocalSound(this.getX(), this.getY(), this.getZ(), SoundEvents.WOLF_HOWL, this.getSoundSource(), 1.1F, 0.9F + this.getRandom().nextFloat() * 0.2F, false);
                 break;
             default:
                 super.handleEntityEvent(id);
@@ -446,7 +447,7 @@ public class Cerberus extends PathfinderMob implements Enemy {
         public void tick() {
             super.tick();
             if (this.progressTimer == 8) {
-                Cerberus.this.level.broadcastEntityEvent(Cerberus.this, SUMMON_CLIENT);
+                Cerberus.this.level().broadcastEntityEvent(Cerberus.this, SUMMON_CLIENT);
             }
         }
 

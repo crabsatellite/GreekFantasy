@@ -64,16 +64,6 @@ public class DragonToothRodItem extends FishingRodItem {
     }
 
     @Override
-    public void fillItemCategory(CreativeModeTab group, NonNullList<ItemStack> items) {
-        // add the item to the group with enchantment already applied
-        if (this.allowedIn(group)) {
-            ItemStack stack = new ItemStack(this);
-            stack.enchant(FISHING_LUCK, FISHING_LUCK_LEVEL);
-            items.add(stack);
-        }
-    }
-
-    @Override
     public void onCraftedBy(ItemStack stack, Level level, Player playerIn) {
         if (stack.getEnchantmentLevel(FISHING_LUCK) < FISHING_LUCK_LEVEL) {
             stack.enchant(FISHING_LUCK, FISHING_LUCK_LEVEL);

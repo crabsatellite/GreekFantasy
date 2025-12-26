@@ -25,7 +25,7 @@ public class SatyrRenderer<T extends Satyr> extends MobRenderer<T, SatyrModel<T>
         BODY_TEXTURE_MAP.put(Variant.BROWN, new ResourceLocation(GreekFantasy.MODID, "textures/entity/satyr/brown.png"));
         BODY_TEXTURE_MAP.put(Variant.CHESTNUT, new ResourceLocation(GreekFantasy.MODID, "textures/entity/satyr/chestnut.png"));
         BODY_TEXTURE_MAP.put(Variant.CREAMY, new ResourceLocation(GreekFantasy.MODID, "textures/entity/satyr/creamy.png"));
-        BODY_TEXTURE_MAP.put(Variant.DARKBROWN, new ResourceLocation(GreekFantasy.MODID, "textures/entity/satyr/darkbrown.png"));
+        BODY_TEXTURE_MAP.put(Variant.DARK_BROWN, new ResourceLocation(GreekFantasy.MODID, "textures/entity/satyr/darkbrown.png"));
         BODY_TEXTURE_MAP.put(Variant.GRAY, new ResourceLocation(GreekFantasy.MODID, "textures/entity/satyr/gray.png"));
         BODY_TEXTURE_MAP.put(Variant.WHITE, new ResourceLocation(GreekFantasy.MODID, "textures/entity/satyr/white.png"));
     }

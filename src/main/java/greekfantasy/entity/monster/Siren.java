@@ -83,7 +83,7 @@ public class Siren extends WaterAnimal implements Enemy {
         return true;
         // do not allow if there are nearby sirens
         //AABB aabb = new AABB(pos).inflate(14.0D);
-        //return level.getEntitiesOfClass(Siren.class, aabb).isEmpty();
+        //return level().getEntitiesOfClass(Siren.class, aabb).isEmpty();
     }
 
     @Override
@@ -118,8 +118,8 @@ public class Siren extends WaterAnimal implements Enemy {
         // singing
         if (this.isCharming() && random.nextInt(8) == 0) {
             final float color = 0.065F + random.nextFloat() * 0.025F;
-            this.playSound(SoundEvents.NOTE_BLOCK_CHIME, 1.8F, color * 15);
-            level.addParticle(ParticleTypes.NOTE, this.getX(), this.getEyeY() + 0.15D, this.getZ(), color, 0.0D, 0.0D);
+            this.playSound(SoundEvents.NOTE_BLOCK_CHIME.value(), 1.8F, color * 15);
+            level().addParticle(ParticleTypes.NOTE, this.getX(), this.getEyeY() + 0.15D, this.getZ(), color, 0.0D, 0.0D);
         }
     }
 
@@ -128,10 +128,10 @@ public class Siren extends WaterAnimal implements Enemy {
         super.tick();
         boolean inWater = this.isInWaterRainOrBubble();
         // random motion when not in water
-        if (!inWater && this.onGround) {
+        if (!inWater && this.onGround()) {
             this.setDeltaMovement(this.getDeltaMovement().add((this.random.nextFloat() * 2.0F - 1.0F) * 0.2F, 0.5D, (this.random.nextFloat() * 2.0F - 1.0F) * 0.2F));
             this.setYRot(this.random.nextFloat() * 360.0F);
-            this.onGround = false;
+            this.setOnGround(false);
             this.hasImpulse = true;
         }
         // update pose
@@ -154,7 +154,7 @@ public class Siren extends WaterAnimal implements Enemy {
 
     @Override
     public void updateSwimming() {
-        if (!this.level.isClientSide) {
+        if (!this.level().isClientSide) {
             this.setSwimming(true);
         }
     }

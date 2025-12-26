@@ -5,11 +5,13 @@ import greekfantasy.entity.monster.BabySpider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -25,6 +27,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.BlockHitResult;
@@ -36,7 +39,8 @@ import net.minecraftforge.network.NetworkHooks;
 
 public class WebBall extends ThrowableItemProjectile {
 
-    protected static final EntityDataAccessor<Byte> TYPE = SynchedEntityData.defineId(WebBall.class, EntityDataSerializers.BYTE);
+    protected static final EntityDataAccessor<Byte> TYPE = SynchedEntityData.defineId(WebBall.class,
+            EntityDataSerializers.BYTE);
     protected static final String KEY_TYPE = "WebType";
 
     public static final byte WEB = 1;
@@ -91,12 +95,12 @@ public class WebBall extends ThrowableItemProjectile {
     @Override
     protected void onHit(HitResult hitResult) {
         // do not process when discarded
-        if (this.level.isClientSide() || !this.isAlive()) {
+        if (this.level().isClientSide() || !this.isAlive()) {
             return;
         }
         // do not collide with cobwebs
         if (hitResult.getType() == HitResult.Type.BLOCK &&
-                level.getBlockState(new BlockPos(hitResult.getLocation())).is(Blocks.COBWEB)) {
+                level().getBlockState(BlockPos.containing(hitResult.getLocation())).is(Blocks.COBWEB)) {
             return;
         }
         super.onHit(hitResult);
@@ -115,14 +119,14 @@ public class WebBall extends ThrowableItemProjectile {
     @Override
     public Entity changeDimension(ServerLevel serverWorld, ITeleporter iTeleporter) {
         Entity entity = getOwner();
-        if (entity != null && entity.level.dimension() != serverWorld.dimension()) {
+        if (entity != null && entity.level().dimension() != serverWorld.dimension()) {
             setOwner(null);
         }
         return super.changeDimension(serverWorld, iTeleporter);
     }
 
     @Override
-    public Packet<?> getAddEntityPacket() {
+    public Packet<ClientGamePacketListener> getAddEntityPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
     }
 
@@ -133,7 +137,7 @@ public class WebBall extends ThrowableItemProjectile {
 
     @Override
     public void makeStuckInBlock(BlockState blockState, Vec3 stuckSpeedMultiplier) {
-        if(!blockState.is(Blocks.COBWEB)) {
+        if (!blockState.is(Blocks.COBWEB)) {
             super.makeStuckInBlock(blockState, stuckSpeedMultiplier);
         }
     }
@@ -151,10 +155,10 @@ public class WebBall extends ThrowableItemProjectile {
     }
 
     protected void onWebImpact(final HitResult raytrace, final Vec3 webPos) {
-        if(level.isClientSide()) {
+        if (level().isClientSide()) {
             return;
         }
-        final BlockPos hitPos = new BlockPos(webPos);
+        final BlockPos hitPos = BlockPos.containing(webPos);
         final byte type = getWebType();
         // nothing (drop string)
         if (type == 0) {
@@ -162,29 +166,28 @@ public class WebBall extends ThrowableItemProjectile {
             return;
         }
         // web
-        if (hasWeb(type) && level.isEmptyBlock(hitPos)) {
-            level.setBlockAndUpdate(hitPos, Blocks.COBWEB.defaultBlockState());
+        if (hasWeb(type) && level().isEmptyBlock(hitPos)) {
+            level().setBlockAndUpdate(hitPos, Blocks.COBWEB.defaultBlockState());
         }
         // spider
         if (hasSpider(type)) {
-            BabySpider spider = GFRegistry.EntityReg.BABY_SPIDER.get().create(level);
+            BabySpider spider = GFRegistry.EntityReg.BABY_SPIDER.get().create(level());
             spider.copyPosition(this);
             spider.restrictTo(hitPos, 12);
-            level.addFreshEntity(spider);
+            level().addFreshEntity(spider);
         }
         // item
-        if (hasItem(type) && this.level instanceof ServerLevel serverLevel) {
+        if (hasItem(type) && this.level() instanceof ServerLevel serverLevel) {
             ResourceLocation resourcelocation = getType().getDefaultLootTable();
-            LootTable loottable = serverLevel.getServer().getLootTables().get(resourcelocation);
-            LootContext.Builder lootcontext$builder = (new LootContext.Builder(serverLevel))
-                    .withRandom(this.random)
+            LootTable loottable = serverLevel.getServer().getLootData().getLootTable(resourcelocation);
+            LootParams.Builder lootparams$builder = new LootParams.Builder(serverLevel)
                     .withParameter(LootContextParams.THIS_ENTITY, this)
                     .withParameter(LootContextParams.ORIGIN, webPos)
-                    .withParameter(LootContextParams.DAMAGE_SOURCE, DamageSource.FALL)
+                    .withParameter(LootContextParams.DAMAGE_SOURCE, this.damageSources().fall())
                     .withOptionalParameter(LootContextParams.KILLER_ENTITY, getOwner())
                     .withOptionalParameter(LootContextParams.DIRECT_KILLER_ENTITY, null);
-            LootContext ctx = lootcontext$builder.create(LootContextParamSets.ENTITY);
-            loottable.getRandomItems(ctx).forEach(this::spawnAtLocation);
+            LootParams lootparams = lootparams$builder.create(LootContextParamSets.ENTITY);
+            loottable.getRandomItems(lootparams).forEach(this::spawnAtLocation);
         }
     }
 
@@ -199,9 +202,12 @@ public class WebBall extends ThrowableItemProjectile {
     public byte setWebType(final boolean web, final boolean spider, final boolean item) {
         // determine type bits
         byte type = 0;
-        if (web) type = (byte) (type | WEB);
-        if (spider) type = (byte) (type | SPIDER);
-        if (item) type = (byte) (type | ITEM);
+        if (web)
+            type = (byte) (type | WEB);
+        if (spider)
+            type = (byte) (type | SPIDER);
+        if (item)
+            type = (byte) (type | ITEM);
         // actually set the web type
         setWebType(type);
         // return the web type

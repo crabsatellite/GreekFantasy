@@ -1,7 +1,6 @@
 package greekfantasy.client.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import greekfantasy.GreekFantasy;
 import greekfantasy.client.screen.radial.NoteRadialMenuItem;
 import greekfantasy.client.screen.radial.RadialMenuHelper;
@@ -10,6 +9,7 @@ import greekfantasy.item.InstrumentItem;
 import greekfantasy.util.Song;
 import greekfantasy.util.SongManager;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -23,7 +23,8 @@ import java.util.List;
 
 public class InstrumentScreen extends Screen {
 
-    private static final ResourceLocation WIDGETS = new ResourceLocation(GreekFantasy.MODID, "textures/gui/song_widgets.png");
+    private static final ResourceLocation WIDGETS = new ResourceLocation(GreekFantasy.MODID,
+            "textures/gui/song_widgets.png");
 
     private static final String[] NOTE_NAMES = {
             "G", "G#", "A", "A#", "B", "C", "C#", "D",
@@ -121,23 +122,26 @@ public class InstrumentScreen extends Screen {
         super.tick();
         this.tickCount++;
         if (this.song != null) {
-            SongManager.playMusic(getMinecraft().player, instrument, song, tickCount, instrument.getVolume(), instrument.getVolume() * 0.5F);
+            SongManager.playMusic(getMinecraft().player, instrument, song, tickCount, instrument.getVolume(),
+                    instrument.getVolume() * 0.5F);
         }
     }
 
     @Override
-    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         // draw radial menu background
-        helper.drawBackground(poseStack, x, y, 0);
+        helper.drawBackground(guiGraphics, x, y, 0);
         // draw other widgets
-        super.render(poseStack, mouseX, mouseY, partialTick);
+        super.render(guiGraphics, mouseX, mouseY, partialTick);
         // draw radial menu items
-        helper.drawItems(poseStack, (int) x, (int) y, 0, RADIAL_ITEM_WIDTH, RADIAL_ITEM_HEIGHT, this.font, this.itemRenderer);
+        helper.drawItems(guiGraphics, (int) x, (int) y, 0, RADIAL_ITEM_WIDTH, RADIAL_ITEM_HEIGHT, this.font);
         // draw other text
         float octaveX = x - font.width(octaveControlComponent) / 2.0f;
-        font.drawShadow(poseStack, octaveControlComponent, octaveX, y + RADIAL_HEIGHT + 4, 0xFFFFFF);
+        guiGraphics.drawString(font, octaveControlComponent, (int) octaveX, (int) (y + RADIAL_HEIGHT + 4), 0xFFFFFF,
+                true);
         float visibilityX = x - font.width(songVisibilityComponent) / 2.0f;
-        font.drawShadow(poseStack, songVisibilityComponent, visibilityX, y + RADIAL_HEIGHT + 4 + font.lineHeight + 1, 0xFFFFFF);
+        guiGraphics.drawString(font, songVisibilityComponent, (int) visibilityX,
+                (int) (y + RADIAL_HEIGHT + 4 + font.lineHeight + 1), 0xFFFFFF, true);
     }
 
     @Override
@@ -149,7 +153,9 @@ public class InstrumentScreen extends Screen {
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
         if (songsVisible && mouseX < this.x - RADIAL_WIDTH - SONG_RADIAL_MARGIN) {
             // attempt to scroll song menu
-            float scrollAmount = Mth.clamp(this.scrollAmount - (float) amount * (1.0F / Math.max(1, this.songs.size() - VISIBLE_SONG_COUNT)), 0.0F, 1.0F);
+            float scrollAmount = Mth.clamp(
+                    this.scrollAmount - (float) amount * (1.0F / Math.max(1, this.songs.size() - VISIBLE_SONG_COUNT)),
+                    0.0F, 1.0F);
             setSongScrollAmount(scrollAmount);
             scrollButton.setScrollAmount(scrollAmount);
         } else {
@@ -220,14 +226,14 @@ public class InstrumentScreen extends Screen {
         private Component credits;
 
         public SongButton(final InstrumentScreen screen, final int x, final int y) {
-            super(x, y, SONG_WIDTH, SONG_HEIGHT, Component.empty(), b -> {
-            });
+            super(Button.builder(Component.empty(), b -> {
+            }).bounds(x, y, SONG_WIDTH, SONG_HEIGHT));
             this.screen = screen;
             this.visible = false;
         }
 
         @Override
-        public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+        protected void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
             if (this.visible) {
                 // draw button background
                 int color = isSelected() ? BACKGROUND_HOVER_COLOR : BACKGROUND_COLOR;
@@ -236,16 +242,16 @@ public class InstrumentScreen extends Screen {
                 int b = (color >> 0) & 0xFF;
                 int a = (color >> 24) & 0xFF;
                 RenderSystem.enableBlend();
-                RenderSystem.setShaderTexture(0, InstrumentScreen.WIDGETS);
                 RenderSystem.setShaderColor(r / 255.0F, g / 255.0F, b / 255.0F, a / 255.0F);
-                screen.blit(poseStack, this.x, this.y, 0, 0, this.width, this.height);
+                guiGraphics.blit(InstrumentScreen.WIDGETS, this.getX(), this.getY(), 0, 0, this.width, this.height);
+                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
                 RenderSystem.disableBlend();
                 // draw the song name and credits
-                screen.font.drawShadow(poseStack, name, this.x + 3, this.y + 4, 0);
-                screen.font.drawShadow(poseStack, credits, this.x + 3, this.y + 5 + screen.font.lineHeight, 0);
+                guiGraphics.drawString(screen.font, name, this.getX() + 3, this.getY() + 4, 0xFFFFFF, true);
+                guiGraphics.drawString(screen.font, credits, this.getX() + 3, this.getY() + 5 + screen.font.lineHeight,
+                        0xAAAAAA, true);
             }
         }
-
 
         /**
          * @return whether this button should render as selected
@@ -268,7 +274,7 @@ public class InstrumentScreen extends Screen {
         public void setSong(final ResourceLocation songId) {
             this.songId = songId;
             if (songId != null) {
-                this.x = (int) (screen.x) - RADIAL_WIDTH - SONG_RADIAL_MARGIN - SONG_WIDTH;
+                this.setX((int) (screen.x) - RADIAL_WIDTH - SONG_RADIAL_MARGIN - SONG_WIDTH);
                 this.visible = true;
                 Song song = GreekFantasy.SONG_MAP.getOrDefault(songId, Song.EMPTY);
                 this.name = song.getName().copy().withStyle(ChatFormatting.WHITE);
@@ -285,23 +291,26 @@ public class InstrumentScreen extends Screen {
         private int scrollY;
 
         public ScrollButton(final InstrumentScreen screen, int x, int y) {
-            super(x, y, SCROLL_WIDTH, VISIBLE_SONG_COUNT * SONG_HEIGHT, Component.empty(), b -> {});
+            super(Button.builder(Component.empty(), b -> {
+            }).bounds(x, y, SCROLL_WIDTH, VISIBLE_SONG_COUNT * SONG_HEIGHT));
             this.screen = screen;
         }
 
         @Override
-        public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+        protected void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
             if (this.visible) {
                 // draw button background
-                int color = isHoveredOrFocused() || screen.isDraggingScrollbar ? BACKGROUND_HOVER_COLOR : BACKGROUND_COLOR;
+                int color = isHoveredOrFocused() || screen.isDraggingScrollbar ? BACKGROUND_HOVER_COLOR
+                        : BACKGROUND_COLOR;
                 int r = (color >> 16) & 0xFF;
                 int g = (color >> 8) & 0xFF;
                 int b = (color >> 0) & 0xFF;
                 int a = (color >> 24) & 0xFF;
                 RenderSystem.enableBlend();
-                RenderSystem.setShaderTexture(0, InstrumentScreen.WIDGETS);
                 RenderSystem.setShaderColor(r / 255.0F, g / 255.0F, b / 255.0F, a / 255.0F);
-                screen.blit(poseStack, this.x, this.scrollY, 0, 26, SCROLL_WIDTH, SCROLL_HEIGHT);
+                guiGraphics.blit(InstrumentScreen.WIDGETS, this.getX(), this.scrollY, 0, 26, SCROLL_WIDTH,
+                        SCROLL_HEIGHT);
+                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
                 RenderSystem.disableBlend();
             }
         }
@@ -309,14 +318,14 @@ public class InstrumentScreen extends Screen {
         @Override
         public void onDrag(double mouseX, double mouseY, double dragX, double dragY) {
             screen.isDraggingScrollbar = true;
-            float scrollAmount = Mth.clamp((float) (mouseY - this.y) / (float) this.height, 0.0F, 1.0F);
+            float scrollAmount = Mth.clamp((float) (mouseY - this.getY()) / (float) this.height, 0.0F, 1.0F);
             screen.setSongScrollAmount(scrollAmount);
             this.setScrollAmount(scrollAmount);
         }
 
         public void setScrollAmount(final float scrollAmount) {
-            this.x = (int) screen.x - RADIAL_WIDTH - SONG_RADIAL_MARGIN - SONG_WIDTH - this.width - 2;
-            this.scrollY = this.y + (int) (scrollAmount * (float)(this.height - SCROLL_HEIGHT));
+            this.setX((int) screen.x - RADIAL_WIDTH - SONG_RADIAL_MARGIN - SONG_WIDTH - this.width - 2);
+            this.scrollY = this.getY() + (int) (scrollAmount * (float) (this.height - SCROLL_HEIGHT));
         }
     }
 }

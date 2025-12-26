@@ -79,8 +79,8 @@ public class FakePigRenderer<T extends LivingEntity> extends LivingEntityRendere
         float f8 = 0.0F;
         float f5 = 0.0F;
         if (!shouldSit && entity.isAlive()) {
-            f8 = Mth.lerp(partialTick, entity.animationSpeedOld, entity.animationSpeed);
-            f5 = entity.animationPosition - entity.animationSpeed * (1.0F - partialTick);
+            f8 = Mth.lerp(partialTick, entity.walkAnimation.speed(), entity.walkAnimation.speed());
+            f5 = entity.walkAnimation.position() - entity.walkAnimation.speed() * (1.0F - partialTick);
             if (entity.isBaby()) {
                 f5 *= 3.0F;
             }

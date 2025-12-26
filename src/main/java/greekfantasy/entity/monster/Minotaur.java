@@ -95,7 +95,7 @@ public class Minotaur extends Monster {
         super.aiStep();
 
         // spawn particles
-        if (level.isClientSide() && this.isStunned()) {
+        if (level().isClientSide() && this.isStunned()) {
             spawnStunnedParticles();
         }
     }
@@ -179,7 +179,7 @@ public class Minotaur extends Monster {
 
     public void setCharging(final boolean charging) {
         setMinotaurState(charging ? CHARGING : NONE);
-        if (!this.level.isClientSide()) {
+        if (!this.level().isClientSide()) {
             // determine if knockback resistance modifier was added
             AttributeInstance knockbackResist = this.getAttribute(Attributes.KNOCKBACK_RESISTANCE);
             boolean hasModifier = knockbackResist.hasModifier(knockbackResistanceModifier);
@@ -201,13 +201,13 @@ public class Minotaur extends Monster {
         final double motion = 0.09D;
         final double radius = 0.7D;
         for (int i = 0; i < 2; i++) {
-            level.addParticle(ParticleTypes.INSTANT_EFFECT,
-                    this.getX() + (level.random.nextDouble() - 0.5D) * radius,
-                    this.getEyeY() + (level.random.nextDouble() - 0.5D) * radius * 0.75D,
-                    this.getZ() + (level.random.nextDouble() - 0.5D) * radius,
-                    (level.random.nextDouble() - 0.5D) * motion,
-                    (level.random.nextDouble() - 0.5D) * motion * 0.5D,
-                    (level.random.nextDouble() - 0.5D) * motion);
+            level().addParticle(ParticleTypes.INSTANT_EFFECT,
+                    this.getX() + (level().random.nextDouble() - 0.5D) * radius,
+                    this.getEyeY() + (level().random.nextDouble() - 0.5D) * radius * 0.75D,
+                    this.getZ() + (level().random.nextDouble() - 0.5D) * radius,
+                    (level().random.nextDouble() - 0.5D) * motion,
+                    (level().random.nextDouble() - 0.5D) * motion * 0.5D,
+                    (level().random.nextDouble() - 0.5D) * motion);
         }
     }
 
@@ -391,7 +391,7 @@ public class Minotaur extends Monster {
          **/
         private boolean hasDirectPath(final Vec3 target) {
             Vec3 start = Minotaur.this.position().add(0, 0.1D, 0);
-            return Minotaur.this.level.clip(new ClipContext(start, target, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, Minotaur.this)).getType() == HitResult.Type.MISS;
+            return Minotaur.this.level().clip(new ClipContext(start, target, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, Minotaur.this)).getType() == HitResult.Type.MISS;
         }
     }
 }

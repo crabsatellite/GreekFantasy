@@ -75,6 +75,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.entity.EntityTypeTest;
 import net.minecraft.world.level.entity.LevelEntityGetter;
+import net.minecraft.util.AbortableIterationConsumer;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
@@ -97,7 +98,8 @@ import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.entity.living.LivingEquipmentChangeEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
-import net.minecraftforge.event.entity.living.LivingSpawnEvent;
+import net.minecraftforge.event.level.LevelEvent;
+import net.minecraftforge.event.entity.living.MobSpawnEvent;
 import net.minecraftforge.event.entity.living.MobEffectEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -122,8 +124,12 @@ public final class GFEvents {
     public static final class ForgeHandler {
 
         public static final UUID STEP_HEIGHT_MODIFIER = UUID.fromString("3b9d697f-8823-4e0e-b704-be09f54712d7");
-        /** Used in the client tick event to ensure items with Overstep provide a step height attribute bonus **/
-        private static final AttributeModifier stepHeightModifier = new AttributeModifier(STEP_HEIGHT_MODIFIER, "Armor step height modifier", 0.62D, AttributeModifier.Operation.ADDITION);;
+        /**
+         * Used in the client tick event to ensure items with Overstep provide a step
+         * height attribute bonus
+         **/
+        private static final AttributeModifier stepHeightModifier = new AttributeModifier(STEP_HEIGHT_MODIFIER,
+                "Armor step height modifier", 0.62D, AttributeModifier.Operation.ADDITION);;
 
         /**
          * Used to spawn a shade with the player's XP when they die.
@@ -132,37 +138,40 @@ public final class GFEvents {
          **/
         @SubscribeEvent(priority = EventPriority.HIGHEST)
         public static void onPlayerDeath(final LivingDeathEvent event) {
-            if (!event.isCanceled() && !event.getEntity().level.isClientSide() && event.getEntity() instanceof Player player) {
+            if (!event.isCanceled() && !event.getEntity().level().isClientSide()
+                    && event.getEntity() instanceof Player player) {
                 // attempt to spawn a shade
                 if (!player.isSpectator() && player.experienceLevel > 3
-                        && !player.level.getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY)
+                        && !player.level().getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY)
                         && player.getRandom().nextFloat() * 100.0F < GreekFantasy.CONFIG.SHADE_SPAWN_CHANCE.get()) {
                     // save XP value
                     int xp = player.totalExperience;
                     // remove XP from player
                     player.giveExperienceLevels(-(player.experienceLevel + 1));
                     // give XP to shade and spawn into world
-                    final Shade shade = GFRegistry.EntityReg.SHADE.get().create(player.level);
+                    final Shade shade = GFRegistry.EntityReg.SHADE.get().create(player.level());
                     shade.moveTo(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot());
                     shade.setStoredXP(Mth.floor(xp * 0.9F));
                     shade.setOwnerUUID(player.getUUID());
                     shade.setPersistenceRequired();
-                    player.level.addFreshEntity(shade);
+                    player.level().addFreshEntity(shade);
                 }
             }
         }
 
         /**
-         * Used to summon a Geryon when a cow is killed and other spawn conditions are met
+         * Used to summon a Geryon when a cow is killed and other spawn conditions are
+         * met
          *
          * @param event the living death event
          */
         @SubscribeEvent
         public static void onLivingDeath(final LivingDeathEvent event) {
-            if (!event.isCanceled() && event.getEntity().isEffectiveAi() && event.getSource().getEntity() instanceof Player) {
+            if (!event.isCanceled() && event.getEntity().isEffectiveAi()
+                    && event.getSource().getEntity() instanceof Player) {
                 // check if the cow was killed by a player and if geryon can spawn here
                 final BlockPos deathPos = event.getEntity().blockPosition();
-                if (event.getEntity() instanceof Cow && Geryon.canGeryonSpawnOn(event.getEntity().level, deathPos)) {
+                if (event.getEntity() instanceof Cow && Geryon.canGeryonSpawnOn(event.getEntity().level(), deathPos)) {
                     // check for Geryon Head blocks nearby
                     final List<BlockPos> heads = new ArrayList<>();
                     final int r = 3;
@@ -171,14 +180,15 @@ public final class GFEvents {
                         for (int y = -2; y <= 2; y++) {
                             for (int z = -r; z <= r; z++) {
                                 pos.setWithOffset(deathPos, x, y, z);
-                                if (event.getEntity().level.getBlockState(pos).is(GFRegistry.BlockReg.GIGANTE_HEAD.get())) {
+                                if (event.getEntity().level().getBlockState(pos)
+                                        .is(GFRegistry.BlockReg.GIGANTE_HEAD.get())) {
                                     heads.add(pos.immutable());
                                 }
                                 // if we found at least three heads, remove them and spawn a geryon
                                 if (heads.size() >= 3) {
-                                    heads.subList(0, 3).forEach(p -> event.getEntity().level.destroyBlock(p, false));
+                                    heads.subList(0, 3).forEach(p -> event.getEntity().level().destroyBlock(p, false));
                                     final float yaw = Mth.wrapDegrees(event.getSource().getEntity().getYRot() + 180.0F);
-                                    Geryon.spawnGeryon(event.getEntity().level, deathPos, yaw);
+                                    Geryon.spawnGeryon(event.getEntity().level(), deathPos, yaw);
                                     return;
                                 }
                             }
@@ -190,11 +200,12 @@ public final class GFEvents {
 
         /**
          * Used to prevent or increase projectile damage when wearing certain armor
+         * 
          * @param event the projectile impact event
          */
         @SubscribeEvent(priority = EventPriority.HIGH)
         public static void onProjectileImpact(final ProjectileImpactEvent event) {
-            if(!event.getProjectile().level.isClientSide()
+            if (!event.getProjectile().level().isClientSide()
                     && event.getRayTraceResult().getType() == HitResult.Type.ENTITY
                     && event.getRayTraceResult() instanceof EntityHitResult entityHitResult
                     && entityHitResult.getEntity() instanceof LivingEntity livingEntity) {
@@ -204,9 +215,11 @@ public final class GFEvents {
                 GreekFantasy.LOGGER.debug("dot=" + dot);
                 final int achillesCount = HellenicArmorItem.getAchillesCount(livingEntity);
                 // determine if the entity is wearing armor and immune to projectiles
-                if(achillesCount > 0 && HellenicArmorItem.isImmune(livingEntity, event.getProjectile(), dot, achillesCount)) {
+                if (achillesCount > 0
+                        && HellenicArmorItem.isImmune(livingEntity, event.getProjectile(), dot, achillesCount)) {
                     // reflect the projectile motion
-                    event.getProjectile().setDeltaMovement(event.getProjectile().getDeltaMovement().multiply(-1.0D, 1.0D, -1.0D));
+                    event.getProjectile()
+                            .setDeltaMovement(event.getProjectile().getDeltaMovement().multiply(-1.0D, 1.0D, -1.0D));
                     // cancel the event
                     event.setCanceled(true);
                     // damage the armor
@@ -214,7 +227,7 @@ public final class GFEvents {
                     return;
                 }
                 // determine if entity is wearing armor and weak to arrow projectiles
-                if(achillesCount > 0 && event.getProjectile() instanceof AbstractArrow arrow
+                if (achillesCount > 0 && event.getProjectile() instanceof AbstractArrow arrow
                         && HellenicArmorItem.isCritical(livingEntity, arrow, dot, achillesCount)) {
                     // double the damage of the projectile
                     arrow.setBaseDamage(arrow.getBaseDamage() * (2.0D + 0.5D * achillesCount));
@@ -223,10 +236,11 @@ public final class GFEvents {
                 }
                 // determine if the entity is wearing nemean lion hide and immune to projectile
                 ItemStack helmet = livingEntity.getItemBySlot(EquipmentSlot.HEAD);
-                if(achillesCount == 0 && helmet.is(GFRegistry.ItemReg.NEMEAN_LION_HIDE.get())
+                if (achillesCount == 0 && helmet.is(GFRegistry.ItemReg.NEMEAN_LION_HIDE.get())
                         && NemeanLionHideItem.isImmune(livingEntity, event.getProjectile(), dot)) {
                     // reflect the projectile motion
-                    event.getProjectile().setDeltaMovement(event.getProjectile().getDeltaMovement().multiply(-1.0D, 1.0D, -1.0D));
+                    event.getProjectile()
+                            .setDeltaMovement(event.getProjectile().getDeltaMovement().multiply(-1.0D, 1.0D, -1.0D));
                     // cancel the event
                     event.setCanceled(true);
                     // damage the armor
@@ -237,9 +251,10 @@ public final class GFEvents {
         }
 
         /**
-         * @param first the first entity
-         * @param second the second entity
-         * @param horizontalOnly true if the dot product should only account for horizontal facing
+         * @param first          the first entity
+         * @param second         the second entity
+         * @param horizontalOnly true if the dot product should only account for
+         *                       horizontal facing
          * @return the dot product between the facing directions of two entities
          */
         private static double getDotProduct(final Entity first, final Entity second, final boolean horizontalOnly) {
@@ -255,22 +270,23 @@ public final class GFEvents {
         /**
          * Used to handle Prisoner of Hades effect
          * (updating portal cooldown and removing when out of the nether)
+         * 
          * @param event
          */
         @SubscribeEvent
         public static void onLivingTick(final LivingEvent.LivingTickEvent event) {
             // only handle event on server
-            if(event.getEntity().level.isClientSide()) {
+            if (event.getEntity().level().isClientSide()) {
                 return;
             }
 
             // handle Prisoner of Hades mob effect
             final MobEffect prisonerOfHades = GFRegistry.MobEffectReg.PRISONER_OF_HADES.get();
-            if(event.getEntity().hasEffect(prisonerOfHades)) {
+            if (event.getEntity().hasEffect(prisonerOfHades)) {
                 // remove when not in nether
-                if (event.getEntity().level.dimension() != Level.NETHER
+                if (event.getEntity().level().dimension() != Level.NETHER
                         || (GreekFantasy.isRGLoaded() && event.getEntity() instanceof Player player
-                            && RGCompat.getInstance().canRemovePrisonerEffect(player))) {
+                                && RGCompat.getInstance().canRemovePrisonerEffect(player))) {
                     event.getEntity().removeEffect(prisonerOfHades);
                 } else {
                     // set portal cooldown
@@ -280,23 +296,25 @@ public final class GFEvents {
 
             // update silkstep enchantment
             if (GreekFantasy.CONFIG.isSilkstepEnabled()
-                    && event.getEntity().getItemBySlot(EquipmentSlot.FEET).getEnchantmentLevel(GFRegistry.EnchantmentReg.SILKSTEP.get()) > 0
+                    && event.getEntity().getItemBySlot(EquipmentSlot.FEET)
+                            .getEnchantmentLevel(GFRegistry.EnchantmentReg.SILKSTEP.get()) > 0
                     && (!(event.getEntity() instanceof Player player && player.getAbilities().flying))
                     && event.getEntity().stuckSpeedMultiplier.lengthSqr() > 1.0E-7D) {
                 // this variable will become true if the player is collided with a cobweb
                 boolean cobweb = false;
                 // check all blocks within player's bounding box
                 AABB axisalignedbb = event.getEntity().getBoundingBox();
-                BlockPos blockpos = new BlockPos(axisalignedbb.minX + 0.001D, axisalignedbb.minY + 0.001D, axisalignedbb.minZ + 0.001D);
-                BlockPos blockpos1 = new BlockPos(axisalignedbb.maxX - 0.001D, axisalignedbb.maxY - 0.001D, axisalignedbb.maxZ - 0.001D);
+                BlockPos blockpos = BlockPos.containing(axisalignedbb.minX + 0.001D, axisalignedbb.minY + 0.001D,
+                        axisalignedbb.minZ + 0.001D);
+                BlockPos blockpos1 = BlockPos.containing(axisalignedbb.maxX - 0.001D, axisalignedbb.maxY - 0.001D,
+                        axisalignedbb.maxZ - 0.001D);
                 BlockPos.MutableBlockPos blockpos$mutable = new BlockPos.MutableBlockPos();
-                entryloop:
-                for (int i = blockpos.getX(); i <= blockpos1.getX(); ++i) {
+                entryloop: for (int i = blockpos.getX(); i <= blockpos1.getX(); ++i) {
                     for (int j = blockpos.getY(); j <= blockpos1.getY(); ++j) {
                         for (int k = blockpos.getZ(); k <= blockpos1.getZ(); ++k) {
                             blockpos$mutable.set(i, j, k);
                             // if the block is a cobweb, exit the loops and change the motion multiplier
-                            if (event.getEntity().level.getBlockState(blockpos$mutable).is(Blocks.COBWEB)) {
+                            if (event.getEntity().level().getBlockState(blockpos$mutable).is(Blocks.COBWEB)) {
                                 cobweb = true;
                                 break entryloop;
                             }
@@ -305,18 +323,19 @@ public final class GFEvents {
                 }
                 // actually reset the speed multiplier
                 if (cobweb) {
-                   event.getEntity().stuckSpeedMultiplier = Vec3.ZERO;
+                    event.getEntity().stuckSpeedMultiplier = Vec3.ZERO;
                 }
             }
         }
 
         /**
          * Used to change player pose when under Curse of Circe.
+         * 
          * @param event
          */
         @SubscribeEvent
         public static void onPlayerTick(final TickEvent.PlayerTickEvent event) {
-            if(event.phase != TickEvent.Phase.START || !event.player.isAlive()) {
+            if (event.phase != TickEvent.Phase.START || !event.player.isAlive()) {
                 return;
             }
 
@@ -334,7 +353,7 @@ public final class GFEvents {
             }
 
             // update pose when player is under curse of circe
-            if(GreekFantasy.CONFIG.isCurseOfCirceEnabled()) {
+            if (GreekFantasy.CONFIG.isCurseOfCirceEnabled()) {
                 final boolean curseOfCirce = event.player.hasEffect(GFRegistry.MobEffectReg.CURSE_OF_CIRCE.get());
                 final Pose forcedPose = event.player.getForcedPose();
                 // update the forced pose
@@ -349,11 +368,11 @@ public final class GFEvents {
             }
 
             // every few ticks, ensure that flying players can still fly
-            if (GreekFantasy.CONFIG.isFlyingEnabled() && event.player.level instanceof ServerLevel &&
+            if (GreekFantasy.CONFIG.isFlyingEnabled() && event.player.level() instanceof ServerLevel &&
                     !event.player.isCreative() && !event.player.isSpectator() && event.player.tickCount > 10
-                    && event.player.level.getGameTime() % 11 == 0) {
+                    && event.player.level().getGameTime() % 11 == 0) {
                 // load saved data
-                final GFSavedData data = GFSavedData.getOrCreate((ServerLevel) event.player.level);
+                final GFSavedData data = GFSavedData.getOrCreate((ServerLevel) event.player.level());
                 // remove flying players who do not meet the conditions
                 if (data.hasFlyingPlayer(event.player) && !GFSavedData.validatePlayer(event.player)) {
                     data.removeFlyingPlayer(event.player);
@@ -369,9 +388,11 @@ public final class GFEvents {
         @SubscribeEvent
         public static void onChangeEquipment(final LivingEquipmentChangeEvent event) {
             // Check which equipment was changed and if it is a player
-            if (GreekFantasy.CONFIG.isFlyingEnabled() && event.getEntity() instanceof Player player && player.level instanceof ServerLevel
-                    && event.getSlot() == EquipmentSlot.FEET && event.getTo().is(GFRegistry.ItemReg.WINGED_SANDALS.get())) {
-                GFSavedData data = GFSavedData.getOrCreate((ServerLevel) player.level);
+            if (GreekFantasy.CONFIG.isFlyingEnabled() && event.getEntity() instanceof Player player
+                    && player.level() instanceof ServerLevel
+                    && event.getSlot() == EquipmentSlot.FEET
+                    && event.getTo().is(GFRegistry.ItemReg.WINGED_SANDALS.get())) {
+                GFSavedData data = GFSavedData.getOrCreate((ServerLevel) player.level());
                 // ensure player meets conditions before enabling flight
                 if (GFSavedData.validatePlayer(player)) {
                     data.addFlyingPlayer(player);
@@ -394,6 +415,7 @@ public final class GFEvents {
 
         /**
          * Used to prevent breaking of blocks when the player is stunned or petrified
+         * 
          * @param event the break speed event
          */
         @SubscribeEvent
@@ -406,6 +428,7 @@ public final class GFEvents {
 
         /**
          * Used to prevent using items on blocks when the player is stunned or petrified
+         * 
          * @param event the right click block event
          */
         @SubscribeEvent
@@ -418,10 +441,12 @@ public final class GFEvents {
 
         /**
          * @param entity the living entity
-         * @return true if the entity is alive and has either the stunned or petrified effect
+         * @return true if the entity is alive and has either the stunned or petrified
+         *         effect
          */
         private static boolean isStunnedOrPetrified(@Nullable LivingEntity entity) {
-            return entity != null && entity.isAlive() && (entity.hasEffect(GFRegistry.MobEffectReg.STUNNED.get()) || entity.hasEffect(GFRegistry.MobEffectReg.PETRIFIED.get()));
+            return entity != null && entity.isAlive() && (entity.hasEffect(GFRegistry.MobEffectReg.STUNNED.get())
+                    || entity.hasEffect(GFRegistry.MobEffectReg.PETRIFIED.get()));
         }
 
         /**
@@ -432,7 +457,7 @@ public final class GFEvents {
          **/
         @SubscribeEvent
         public static void onLivingTarget(final LivingChangeTargetEvent event) {
-            if(null == event.getNewTarget() || event.getEntity().level.isClientSide()) {
+            if (null == event.getNewTarget() || event.getEntity().level().isClientSide()) {
                 return;
             }
             // check mob or target for curse of circe
@@ -440,7 +465,7 @@ public final class GFEvents {
                     && event.getEntity() instanceof Mob mob
                     && event.getNewTarget() != mob.getLastHurtByMob()
                     && (mob.hasEffect(GFRegistry.MobEffectReg.CURSE_OF_CIRCE.get())
-                        || event.getNewTarget().hasEffect(GFRegistry.MobEffectReg.CURSE_OF_CIRCE.get()))) {
+                            || event.getNewTarget().hasEffect(GFRegistry.MobEffectReg.CURSE_OF_CIRCE.get()))) {
                 // remove attack target
                 event.setNewTarget(null);
             }
@@ -450,11 +475,12 @@ public final class GFEvents {
                 event.setNewTarget(null);
             }
             // check mob for capability
-            if(event.getEntity().getType() == EntityType.GUARDIAN
+            if (event.getEntity().getType() == EntityType.GUARDIAN
                     && event.getEntity() instanceof PathfinderMob mob
                     && event.getNewTarget() instanceof Player player) {
-                LazyOptional<IFriendlyGuardian> CAP = event.getEntity().getCapability(GreekFantasy.FRIENDLY_GUARDIAN_CAP);
-                if(CAP.isPresent() && CAP.orElse(FriendlyGuardian.EMPTY).isNeutralTowardPlayer(mob, player)) {
+                LazyOptional<IFriendlyGuardian> CAP = event.getEntity()
+                        .getCapability(GreekFantasy.FRIENDLY_GUARDIAN_CAP);
+                if (CAP.isPresent() && CAP.orElse(FriendlyGuardian.EMPTY).isNeutralTowardPlayer(mob, player)) {
                     // remove attack target
                     event.setNewTarget(null);
                 }
@@ -463,33 +489,37 @@ public final class GFEvents {
 
         /**
          * Used to update client when Curse of Circe is applied
+         * 
          * @param event the potion added event
          */
         @SubscribeEvent
         public static void onMobEffectStart(final MobEffectEvent.Added event) {
-            if(!event.getEntity().level.isClientSide()
+            if (!event.getEntity().level().isClientSide()
                     && GreekFantasy.CONFIG.isCurseOfCirceEnabled()
                     && event.getEffectInstance() != null
                     && event.getEffectInstance().getEffect() == GFRegistry.MobEffectReg.CURSE_OF_CIRCE.get()
                     && event.getOldEffectInstance() == null) {
                 // update health
-                if(event.getOldEffectInstance() == null) {
-                    float health = Mth.clamp(event.getEntity().getHealth(), 1.0F, event.getEntity().getMaxHealth() + (float) CurseOfCirceEffect.HEALTH_MODIFIER);
+                if (event.getOldEffectInstance() == null) {
+                    float health = Mth.clamp(event.getEntity().getHealth(), 1.0F,
+                            event.getEntity().getMaxHealth() + (float) CurseOfCirceEffect.HEALTH_MODIFIER);
                     event.getEntity().setHealth(health);
                 }
                 // send packet
                 GreekFantasy.CHANNEL.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> event.getEntity()),
-                        SCurseOfCircePacket.addEffect(event.getEntity().getId(), event.getEffectInstance().getDuration()));
+                        SCurseOfCircePacket.addEffect(event.getEntity().getId(),
+                                event.getEffectInstance().getDuration()));
             }
         }
 
         /**
          * Used to update client when Curse of Circe is removed
+         * 
          * @param event the potion added event
          */
         @SubscribeEvent
         public static void onMobEffectRemove(final MobEffectEvent.Remove event) {
-            if(!event.getEntity().level.isClientSide() && GreekFantasy.CONFIG.isCurseOfCirceEnabled()
+            if (!event.getEntity().level().isClientSide() && GreekFantasy.CONFIG.isCurseOfCirceEnabled()
                     && event.getEffectInstance() != null
                     && event.getEffectInstance().getEffect() == GFRegistry.MobEffectReg.CURSE_OF_CIRCE.get()) {
                 // send packet
@@ -500,11 +530,12 @@ public final class GFEvents {
 
         /**
          * Used to update client when Curse of Circe is expired
+         * 
          * @param event the potion added event
          */
         @SubscribeEvent
         public static void onMobEffectExpire(final MobEffectEvent.Expired event) {
-            if(!event.getEntity().level.isClientSide() && GreekFantasy.CONFIG.isCurseOfCirceEnabled()
+            if (!event.getEntity().level().isClientSide() && GreekFantasy.CONFIG.isCurseOfCirceEnabled()
                     && event.getEffectInstance() != null
                     && event.getEffectInstance().getEffect() == GFRegistry.MobEffectReg.CURSE_OF_CIRCE.get()) {
                 // send packet
@@ -522,18 +553,21 @@ public final class GFEvents {
             if (!event.isCanceled() && event.getPlacedBlock().is(SummonBossUtil.BRONZE_BLOCK)
                     && event.getLevel() instanceof Level) {
                 // delegate to SummonBossUtil
-                SummonBossUtil.onPlaceBronzeBlock((Level) event.getLevel(), event.getPos(), event.getPlacedBlock(), event.getEntity());
+                SummonBossUtil.onPlaceBronzeBlock((Level) event.getLevel(), event.getPos(), event.getPlacedBlock(),
+                        event.getEntity());
             }
         }
 
         /**
          * Used to add a step height modifier to items with Overstep enchantment
+         * 
          * @param event the attribute modifier event
          */
         @SubscribeEvent
         public static void onItemAttributeModifiers(final ItemAttributeModifierEvent event) {
             // determine if step height modifer should apply
-            if(event.getSlotType() == EquipmentSlot.FEET && event.getItemStack().getEnchantmentLevel(GFRegistry.EnchantmentReg.OVERSTEP.get()) > 0) {
+            if (event.getSlotType() == EquipmentSlot.FEET
+                    && event.getItemStack().getEnchantmentLevel(GFRegistry.EnchantmentReg.OVERSTEP.get()) > 0) {
                 event.addModifier(ForgeMod.STEP_HEIGHT_ADDITION.get(), stepHeightModifier);
             }
         }
@@ -545,48 +579,61 @@ public final class GFEvents {
          **/
         @SubscribeEvent
         public static void onEntityJoinWorld(final EntityJoinLevelEvent event) {
-            if(event.getEntity() instanceof final PathfinderMob mob && !event.getEntity().level.isClientSide()) {
+            if (event.getEntity() instanceof final PathfinderMob mob && !event.getEntity().level().isClientSide()) {
                 // add wither skeleton goal to avoid orthus
-                if(mob.getType() == EntityType.WITHER_SKELETON) {
+                if (mob.getType() == EntityType.WITHER_SKELETON) {
                     mob.goalSelector.addGoal(3, new AvoidEntityGoal<>(mob, Orthus.class, 6.0F, 1.0D, 1.2D));
                 }
                 // add rabbit goal to avoid cerastes
-                if(mob.getType() == EntityType.RABBIT && ((Rabbit)event.getEntity()).getRabbitType() != 99) {
+                if (mob.getType() == EntityType.RABBIT && ((Rabbit) event.getEntity()).getVariant().id() != 99) {
                     mob.goalSelector.addGoal(3, new AvoidEntityGoal<>(mob, Cerastes.class, 6.0F, 1.0D, 1.2D,
                             e -> e instanceof Cerastes cerastes && !cerastes.isHiding()));
                 }
                 // add guardian goals to attack enemies and move to ocean villages
-                if(mob.getType() == EntityType.GUARDIAN) {
-                    Predicate<LivingEntity> predicate = entity -> entity instanceof Enemy && !(entity instanceof Guardian) && entity.isInWater() && entity.distanceToSqr(mob) > 9.0D;
-                    mob.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(mob, LivingEntity.class, 10, true, false, predicate) {
-                        @Override
-                        public boolean canUse() {
-                            return super.canUse() && this.mob.getCapability(GreekFantasy.FRIENDLY_GUARDIAN_CAP).orElse(FriendlyGuardian.EMPTY).isEnabled();
-                        }
-                    });
-                    if(GreekFantasy.CONFIG.GUARDIAN_SEEK_OCEAN_VILLAGE.get()) {
-                        mob.goalSelector.addGoal(3, new MoveToStructureGoal(mob, 1.0D, 4, 8, 10, new ResourceLocation(GreekFantasy.MODID, "ocean_village"), BehaviorUtils::getRandomSwimmablePos) {
-                            @Override
-                            public boolean canUse() {
-                                return super.canUse() && this.mob.getCapability(GreekFantasy.FRIENDLY_GUARDIAN_CAP).orElse(FriendlyGuardian.EMPTY).isEnabled();
-                            }
-                        });
+                if (mob.getType() == EntityType.GUARDIAN) {
+                    Predicate<LivingEntity> predicate = entity -> entity instanceof Enemy
+                            && !(entity instanceof Guardian) && entity.isInWater() && entity.distanceToSqr(mob) > 9.0D;
+                    mob.targetSelector.addGoal(1,
+                            new NearestAttackableTargetGoal<>(mob, LivingEntity.class, 10, true, false, predicate) {
+                                @Override
+                                public boolean canUse() {
+                                    return super.canUse() && this.mob.getCapability(GreekFantasy.FRIENDLY_GUARDIAN_CAP)
+                                            .orElse(FriendlyGuardian.EMPTY).isEnabled();
+                                }
+                            });
+                    if (GreekFantasy.CONFIG.GUARDIAN_SEEK_OCEAN_VILLAGE.get()) {
+                        mob.goalSelector.addGoal(3,
+                                new MoveToStructureGoal(mob, 1.0D, 4, 8, 10,
+                                        new ResourceLocation(GreekFantasy.MODID, "ocean_village"),
+                                        BehaviorUtils::getRandomSwimmablePos) {
+                                    @Override
+                                    public boolean canUse() {
+                                        return super.canUse()
+                                                && this.mob.getCapability(GreekFantasy.FRIENDLY_GUARDIAN_CAP)
+                                                        .orElse(FriendlyGuardian.EMPTY).isEnabled();
+                                    }
+                                });
                     }
                 }
                 // add dolphin goals to be tempted by tritons and move to ocean villages
-                if(mob.getType() == EntityType.DOLPHIN && mob instanceof Dolphin dolphin) {
-                    mob.goalSelector.addGoal(2, new DolphinTemptByTritonGoal(dolphin, 0.9D, Ingredient.of(ItemTags.FISHES)));
+                if (mob.getType() == EntityType.DOLPHIN && mob instanceof Dolphin dolphin) {
+                    mob.goalSelector.addGoal(2,
+                            new DolphinTemptByTritonGoal(dolphin, 0.9D, Ingredient.of(ItemTags.FISHES)));
                     if (GreekFantasy.CONFIG.DOLPHIN_SEEK_OCEAN_VILLAGE.get()) {
-                        mob.goalSelector.addGoal(3, new MoveToStructureGoal(dolphin, 1.0D, 5, 10, 15, new ResourceLocation(GreekFantasy.MODID, "ocean_village"), BehaviorUtils::getRandomSwimmablePos));
+                        mob.goalSelector.addGoal(3,
+                                new MoveToStructureGoal(dolphin, 1.0D, 5, 10, 15,
+                                        new ResourceLocation(GreekFantasy.MODID, "ocean_village"),
+                                        BehaviorUtils::getRandomSwimmablePos));
                     }
                 }
                 // add drowned goals to attack tritons and naiads
-                if(mob.getType() == EntityType.DROWNED) {
+                if (mob.getType() == EntityType.DROWNED) {
                     mob.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(mob, Triton.class, false));
                     mob.targetSelector.addGoal(4, new NearestAttackableTargetGoal<>(mob, Naiad.class, true, false));
                 }
                 // add zombie goal to attack automaton
-                if(mob.getType() == EntityType.ZOMBIE || mob.getType() == EntityType.DROWNED || mob.getType() == EntityType.HUSK) {
+                if (mob.getType() == EntityType.ZOMBIE || mob.getType() == EntityType.DROWNED
+                        || mob.getType() == EntityType.HUSK) {
                     mob.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(mob, Automaton.class, true));
                 }
             }
@@ -598,18 +645,21 @@ public final class GFEvents {
          * @param event the spawn event
          **/
         @SubscribeEvent
-        public static void onLivingCheckSpawn(final LivingSpawnEvent.CheckSpawn event) {
+        public static void onLivingCheckSpawn(final MobSpawnEvent.SpawnPlacementCheck event) {
             final int cRadius = GreekFantasy.CONFIG.getPalladiumChunkRange();
             final int cVertical = GreekFantasy.CONFIG.getPalladiumYRange() / 2; // divide by 2 to center on block
-            if (GreekFantasy.CONFIG.isPalladiumEnabled() && !event.getEntity().level.isClientSide()
-                    && (event.getSpawnReason() == MobSpawnType.NATURAL
-                        || event.getSpawnReason() == MobSpawnType.REINFORCEMENT
-                        || event.getSpawnReason() == MobSpawnType.PATROL
-                        || event.getSpawnReason() == MobSpawnType.SPAWNER)
-                    && event.getLevel() instanceof ServerLevel level
-                    && event.getEntity() instanceof Enemy && event.getEntity().canChangeDimensions()) {
+            // In 1.20.1, SpawnPlacementCheck no longer has getEntity()
+            // We use getEntityType() and getSpawnType() instead
+            if (GreekFantasy.CONFIG.isPalladiumEnabled()
+                    && (event.getSpawnType() == MobSpawnType.NATURAL
+                            || event.getSpawnType() == MobSpawnType.REINFORCEMENT
+                            || event.getSpawnType() == MobSpawnType.PATROL
+                            || event.getSpawnType() == MobSpawnType.SPAWNER)
+                    && event.getLevel() instanceof ServerLevel level) {
+                // Check if the entity type is a hostile mob
+                EntityType<?> entityType = event.getEntityType();
                 // determine spawn area
-                final BlockPos eventPos = new BlockPos(event.getX(), event.getY(), event.getZ());
+                final BlockPos eventPos = event.getPos();
                 final ChunkPos eventChunkPos = new ChunkPos(eventPos);
                 final ChunkPos minChunkPos = new ChunkPos(eventChunkPos.x - cRadius, eventChunkPos.z - cRadius);
                 final ChunkPos maxChunkPos = new ChunkPos(eventChunkPos.x + cRadius, eventChunkPos.z + cRadius);
@@ -620,9 +670,10 @@ public final class GFEvents {
                 // search each chunk in range for a palladium
                 LevelEntityGetter<Entity> entityGetter = level.getEntities();
                 entityGetter.get(EntityTypeTest.forClass(Palladium.class), aabb, e -> {
-                    if(event.getResult() != Event.Result.DENY) {
+                    if (event.getResult() != Event.Result.DENY) {
                         event.setResult(Event.Result.DENY);
                     }
+                    return AbortableIterationConsumer.Continuation.CONTINUE;
                 });
             }
         }
@@ -630,26 +681,28 @@ public final class GFEvents {
         /**
          * Used to sometimes replace Witch with Circe when a witch is spawned.
          *
-         * @param event the LivingSpawnEvent.SpecialSpawn
+         * @param event the MobSpawnEvent.PositionCheck
          */
         @SubscribeEvent
-        public static void onEntitySpawn(final LivingSpawnEvent.SpecialSpawn event) {
+        public static void onEntitySpawn(final MobSpawnEvent.PositionCheck event) {
             // check if the entity is a witch
             if (event.getEntity() != null && event.getEntity().getType() == EntityType.WITCH
                     && event.getLevel() instanceof ServerLevel level
-                    && (event.getLevel().getRandom().nextDouble() * 100.0D) < GreekFantasy.CONFIG.CIRCE_SPAWN_CHANCE.get()) {
+                    && (event.getLevel().getRandom().nextDouble() * 100.0D) < GreekFantasy.CONFIG.CIRCE_SPAWN_CHANCE
+                            .get()) {
                 event.setCanceled(true);
                 // spawn Circe instead of witch
-                BlockPos pos = new BlockPos(event.getX(), event.getY(), event.getZ());
+                BlockPos pos = BlockPos.containing(event.getX(), event.getY(), event.getZ());
                 final Circe circe = GFRegistry.EntityReg.CIRCE.get().create((Level) event.getLevel());
                 circe.moveTo(event.getX(), event.getY(), event.getZ(), 0, 0);
                 level.addFreshEntity(circe);
-                circe.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), event.getSpawnReason(), null, null);
+                circe.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), event.getSpawnType(), null, null);
             }
         }
 
         /**
-         * Used to replace ocelot with Nemean Lion when the former is struck by lightning
+         * Used to replace ocelot with Nemean Lion when the former is struck by
+         * lightning
          * (while under the Strength potion effect)
          *
          * @param event the EntityStruckByLightning event
@@ -658,17 +711,18 @@ public final class GFEvents {
         public static void onEntityStruckByLightning(final EntityStruckByLightningEvent event) {
             if (event.getEntity() instanceof LivingEntity livingEntity && livingEntity.getType() == EntityType.OCELOT
                     && livingEntity.getEffect(MobEffects.DAMAGE_BOOST) != null
-                    && livingEntity.level.getDifficulty() != Difficulty.PEACEFUL
-                    && livingEntity.level.random.nextFloat() * 100.0F < GreekFantasy.CONFIG.NEMEAN_LION_LIGHTNING_CHANCE.get()) {
+                    && livingEntity.level().getDifficulty() != Difficulty.PEACEFUL
+                    && livingEntity.level().random.nextFloat()
+                            * 100.0F < GreekFantasy.CONFIG.NEMEAN_LION_LIGHTNING_CHANCE.get()) {
                 // remove the entity and spawn a nemean lion
-                NemeanLion lion = GFRegistry.EntityReg.NEMEAN_LION.get().create(event.getEntity().level);
+                NemeanLion lion = GFRegistry.EntityReg.NEMEAN_LION.get().create(event.getEntity().level());
                 lion.copyPosition(event.getEntity());
                 if (event.getEntity().hasCustomName()) {
                     lion.setCustomName(event.getEntity().getCustomName());
                     lion.setCustomNameVisible(event.getEntity().isCustomNameVisible());
                 }
                 lion.setPersistenceRequired();
-                event.getEntity().level.addFreshEntity(lion);
+                event.getEntity().level().addFreshEntity(lion);
                 event.getEntity().discard();
             }
         }
@@ -682,16 +736,16 @@ public final class GFEvents {
          **/
         @SubscribeEvent
         public static void onPlayerInteract(final PlayerInteractEvent.EntityInteract event) {
-            if(event.isCanceled() || !(event.getLevel() instanceof ServerLevel)) {
+            if (event.isCanceled() || !(event.getLevel() instanceof ServerLevel)) {
                 return;
             }
-            if(event.isCancelable() && isStunnedOrPetrified(event.getEntity())) {
+            if (event.isCancelable() && isStunnedOrPetrified(event.getEntity())) {
                 event.setCanceled(true);
                 return;
             }
             ServerLevel level = (ServerLevel) event.getLevel();
             // when player uses poisonous potato on adult hoglin while outside the nether
-            if ((!GreekFantasy.CONFIG.GIANT_BOAR_NON_NETHER.get() || level.dimension() != Level.NETHER)
+            if ((!GreekFantasy.CONFIG.GIANT_BOAR_NON_NETHER.get() || event.getLevel().dimension() != Level.NETHER)
                     && event.getTarget().getType() == EntityType.HOGLIN
                     && event.getTarget() instanceof Hoglin hoglin
                     && event.getItemStack().is(GiantBoar.TRIGGER)) {
@@ -729,19 +783,20 @@ public final class GFEvents {
             }
         }
 
-
         /**
          * Canceled when the player is stunned or petrified.
-         * Used to trigger Lord of the Sea when the player starts using an enchanted trident
+         * Used to trigger Lord of the Sea when the player starts using an enchanted
+         * trident
+         * 
          * @param event the use item start event
          */
         @SubscribeEvent
         public static void onPlayerStartUsingItem(final LivingEntityUseItemEvent.Start event) {
-            if(event.isCancelable() && isStunnedOrPetrified(event.getEntity())) {
+            if (event.isCancelable() && isStunnedOrPetrified(event.getEntity())) {
                 event.setCanceled(true);
                 return;
             }
-            if(!event.getEntity().level.isClientSide() && event.getEntity() instanceof ServerPlayer player
+            if (!event.getEntity().level().isClientSide() && event.getEntity() instanceof ServerPlayer player
                     && !event.isCanceled() && event.getItem().is(Items.TRIDENT)
                     && event.getItem().getEnchantmentLevel(GFRegistry.EnchantmentReg.LORD_OF_THE_SEA.get()) > 0
                     && !player.getCooldowns().isOnCooldown(Items.TRIDENT)
@@ -754,11 +809,12 @@ public final class GFEvents {
 
         /**
          * Canceled when the player is stunned or petrified
+         * 
          * @param event the use item tick event
          */
         @SubscribeEvent
         public static void onPlayerTickUsingItem(final LivingEntityUseItemEvent.Tick event) {
-            if(event.isCancelable() && isStunnedOrPetrified(event.getEntity())) {
+            if (event.isCancelable() && isStunnedOrPetrified(event.getEntity())) {
                 event.setCanceled(true);
                 return;
             }
@@ -767,19 +823,20 @@ public final class GFEvents {
         /**
          * Canceled when the player is stunned or petrified.
          * Used to run daybreak enchantment when right clicking while holding a clock.
+         * 
          * @param event the player right click item event
          */
         @SubscribeEvent
         public static void onPlayerRightClickItem(final PlayerInteractEvent.RightClickItem event) {
-            if(event.isCancelable() && isStunnedOrPetrified(event.getEntity())) {
+            if (event.isCancelable() && isStunnedOrPetrified(event.getEntity())) {
                 event.setCanceled(true);
                 return;
             }
-            if(!event.getEntity().level.isClientSide() && event.getEntity() instanceof ServerPlayer player
+            if (!event.getEntity().level().isClientSide() && event.getEntity() instanceof ServerPlayer player
                     && !event.isCanceled() && event.getItemStack().is(Items.CLOCK)
                     && event.getItemStack().getEnchantmentLevel(GFRegistry.EnchantmentReg.DAYBREAK.get()) > 0
-                    && player.level.getGameRules().getBoolean(GameRules.RULE_DAYLIGHT)
-                    && player.level.getDayTime() % 24000L > 13000L
+                    && player.level().getGameRules().getBoolean(GameRules.RULE_DAYLIGHT)
+                    && player.level().getDayTime() % 24000L > 13000L
                     && (!GreekFantasy.isRGLoaded() || RGCompat.getInstance().canUseDaybreak(player))) {
                 // cancel the event
                 event.setCanceled(true);
@@ -789,7 +846,7 @@ public final class GFEvents {
 
         @SubscribeEvent
         public static void onAttachCapabilities(final AttachCapabilitiesEvent<Entity> event) {
-            if(event.getObject() instanceof Guardian) {
+            if (event.getObject() instanceof Guardian) {
                 event.addCapability(FriendlyGuardian.REGISTRY_NAME, new FriendlyGuardian.Provider());
             }
         }
@@ -798,23 +855,25 @@ public final class GFEvents {
             final BlockHitResult raytrace = ThunderboltItem.raytraceFromEntity(player, 48.0F);
             // add a lightning bolt at the resulting position
             if (raytrace.getType() != HitResult.Type.MISS) {
-                final Whirl whirl = GFRegistry.EntityReg.WHIRL.get().create(player.level);
-                final BlockPos pos = new BlockPos(raytrace.getLocation());
+                final Whirl whirl = GFRegistry.EntityReg.WHIRL.get().create(player.level());
+                final BlockPos pos = BlockPos.containing(raytrace.getLocation());
                 // make sure there is enough water here
-                if (player.level.getFluidState(pos).is(FluidTags.WATER)
-                        && player.level.getFluidState(pos.below((int) Math.ceil(whirl.getBbHeight()))).is(FluidTags.WATER)) {
+                if (player.level().getFluidState(pos).is(FluidTags.WATER)
+                        && player.level().getFluidState(pos.below((int) Math.ceil(whirl.getBbHeight())))
+                                .is(FluidTags.WATER)) {
                     // summon a powerful whirl with limited life and mob attracting turned on
-                    whirl.moveTo(raytrace.getLocation().x(), raytrace.getLocation().y() - whirl.getBbHeight(), raytrace.getLocation().z(), 0, 0);
-                    player.level.addFreshEntity(whirl);
+                    whirl.moveTo(raytrace.getLocation().x(), raytrace.getLocation().y() - whirl.getBbHeight(),
+                            raytrace.getLocation().z(), 0, 0);
+                    player.level().addFreshEntity(whirl);
                     whirl.setLimitedLife(GreekFantasy.CONFIG.LORD_OF_THE_SEA_WHIRL_LIFESPAN.get() * 20);
                     whirl.setAttractMobs(true);
                     whirl.playSound(SoundEvents.TRIDENT_THUNDER, 1.5F, 0.6F + whirl.getRandom().nextFloat() * 0.32F);
                     // summon a lightning bolt
-                    LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(player.level);
+                    LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(player.level());
                     bolt.setSilent(true);
                     bolt.setPos(raytrace.getLocation().x(), raytrace.getLocation().y(), raytrace.getLocation().z());
                     bolt.setVisualOnly(true);
-                    player.level.addFreshEntity(bolt);
+                    player.level().addFreshEntity(bolt);
                     // cooldown and item damage
                     player.getCooldowns().addCooldown(item.getItem(), 100);
                     if (!player.isCreative()) {
@@ -825,7 +884,7 @@ public final class GFEvents {
         }
 
         private static void useDaybreak(final ServerPlayer player, final ItemStack item) {
-            final ServerLevel world = player.getLevel();
+            final ServerLevel world = player.serverLevel();
             long nextDay = world.getLevelData().getDayTime() + 24000L;
             world.setDayTime(nextDay - nextDay % 24000L);
             // break the item
@@ -844,10 +903,20 @@ public final class GFEvents {
         }
 
         @SubscribeEvent
+        public static void onBuildCreativeModeTabContents(net.minecraftforge.event.BuildCreativeModeTabContentsEvent event) {
+            if (event.getTabKey() == GFRegistry.ItemReg.GF_TAB.getKey()) {
+                // Add all mod items to the creative tab
+                GFRegistry.ItemReg.getItemsRegister().getEntries().forEach(item -> {
+                    event.accept(item.get());
+                });
+            }
+        }
+
+        @SubscribeEvent
         public static void onAddPackFinders(final AddPackFindersEvent event) {
-            if(event.getPackType() == PackType.SERVER_DATA) {
+            if (event.getPackType() == PackType.SERVER_DATA) {
                 // register RPG Gods data pack
-                if(GreekFantasy.isRGLoaded()) {
+                if (GreekFantasy.isRGLoaded()) {
                     GreekFantasy.LOGGER.info("Greek Fantasy detected RPG Gods, registering data pack now");
                     registerAddon(event, "data_rpggods");
                 }
@@ -855,16 +924,20 @@ public final class GFEvents {
         }
 
         private static void registerAddon(final AddPackFindersEvent event, final String packName) {
-            event.addRepositorySource((packConsumer, constructor) -> {
-                Pack pack = Pack.create(GreekFantasy.MODID + ":" + packName, true, () -> {
-                    Path path = ModList.get().getModFileById(GreekFantasy.MODID).getFile().findResource("/" + packName);
-                    return new PathPackResources(packName, path);
-                }, constructor, Pack.Position.TOP, PackSource.DEFAULT);
-
+            // In 1.20.1, addRepositorySource takes a single RepositorySource parameter
+            event.addRepositorySource(packConsumer -> {
+                Path path = ModList.get().getModFileById(GreekFantasy.MODID).getFile().findResource("/" + packName);
+                Pack.ResourcesSupplier resourcesSupplier = (packId) -> new PathPackResources(packId, true, path);
+                Pack pack = Pack.readMetaAndCreate(
+                        GreekFantasy.MODID + ":" + packName,
+                        net.minecraft.network.chat.Component.literal(packName),
+                        true,
+                        resourcesSupplier,
+                        event.getPackType(),
+                        Pack.Position.TOP,
+                        PackSource.DEFAULT);
                 if (pack != null) {
                     packConsumer.accept(pack);
-                } else {
-                    GreekFantasy.LOGGER.error(GreekFantasy.MODID + ": Failed to register data pack \"" + packName + "\"");
                 }
             });
         }

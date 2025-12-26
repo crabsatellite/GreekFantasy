@@ -41,7 +41,7 @@ public class WaterAnimalMoveControl extends MoveControl {
             this.waterAnimal.setSpeed(f2);
             this.waterAnimal.setDeltaMovement(this.waterAnimal.getDeltaMovement().add((double) f2 * d0 * 0.03D, (double) f2 * d1 * 0.1D, (double) f2 * d2 * 0.03D));
         } else {
-            if (!this.waterAnimal.isOnGround()) {
+            if (!this.waterAnimal.onGround()) {
                 this.waterAnimal.setDeltaMovement(this.waterAnimal.getDeltaMovement().add(0.0D, -0.008D, 0.0D));
             }
 

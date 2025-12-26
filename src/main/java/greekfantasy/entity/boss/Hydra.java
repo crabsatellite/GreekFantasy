@@ -131,7 +131,7 @@ public class Hydra extends Monster {
         // boss info
         this.bossInfo.setProgress(this.getHealth() / this.getMaxHealth());
 
-        if (!getPassengers().isEmpty() && !level.isClientSide()) {
+        if (!getPassengers().isEmpty() && !level().isClientSide()) {
             // determine if all heads are charred
             int charred = 0;
             HydraHead head;
@@ -144,7 +144,7 @@ public class Hydra extends Monster {
             // if all heads are charred, kill the hydra; otherwise, heal the hydra
             if (charred == getHeads()) {
                 DamageSource source = this.getLastDamageSource();
-                hurt(source != null ? source : DamageSource.STARVE, getMaxHealth() * 2.0F);
+                hurt(source != null ? source : this.damageSources().starve(), getMaxHealth() * 2.0F);
                 getPassengers().forEach(e -> e.discard());
             } else if (getHealth() < getMaxHealth() && random.nextFloat() < 0.125F) {
                 heal(1.25F * (getHeads() - charred));
@@ -217,8 +217,8 @@ public class Hydra extends Monster {
      */
     public HydraHead addHead(final int id) {
         // GreekFantasy.LOGGER.debug("Adding head with id " + id);
-        if (!level.isClientSide()) {
-            HydraHead head = GFRegistry.EntityReg.HYDRA_HEAD.get().create(level);
+        if (!level().isClientSide()) {
+            HydraHead head = GFRegistry.EntityReg.HYDRA_HEAD.get().create(level());
             head.moveTo(getX(), getY(), getZ(), 0, 0);
             // add the entity to the world (commented out bc of errors: "trying to add entity with duplicated UUID ...")
             // world.addEntity(head);

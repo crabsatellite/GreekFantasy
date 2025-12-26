@@ -97,7 +97,7 @@ public class Fury extends Monster implements FlyingAnimal, RangedAttackMob {
         super.aiStep();
         // update falling moveSpeed
         Vec3 m = getDeltaMovement();
-        if (this.isEffectiveAi() && !this.onGround && m.y < 0.0D) {
+        if (this.isEffectiveAi() && !this.onGround() && m.y < 0.0D) {
             final double multY = this.getTarget() != null ? 0.9D : 0.6D;
             setDeltaMovement(m.multiply(1.0D, multY, 1.0D));
         }
@@ -106,7 +106,7 @@ public class Fury extends Monster implements FlyingAnimal, RangedAttackMob {
     @Override
     public void tick() {
         super.tick();
-        if (this.level.isClientSide()) {
+        if (this.level().isClientSide()) {
             // update flying counter
             flyingTime0 = flyingTime;
             if (this.isFlying()) {
@@ -166,7 +166,7 @@ public class Fury extends Monster implements FlyingAnimal, RangedAttackMob {
 
     @Override
     public boolean isFlying() {
-        return !this.onGround || this.getDeltaMovement().lengthSqr() > 0.06D;
+        return !this.onGround() || this.getDeltaMovement().lengthSqr() > 0.06D;
     }
 
     public float getFlyingTime(final float partialTick) {
@@ -183,9 +183,9 @@ public class Fury extends Monster implements FlyingAnimal, RangedAttackMob {
 
     @Override
     public void performRangedAttack(LivingEntity target, float distanceFactor) {
-        if (!level.isClientSide()) {
-            Curse curse = Curse.create(level, this);
-            level.addFreshEntity(curse);
+        if (!level().isClientSide()) {
+            Curse curse = Curse.create(level(), this);
+            level().addFreshEntity(curse);
         }
         this.playSound(SoundEvents.LLAMA_SPIT, 1.2F, 1.0F);
     }

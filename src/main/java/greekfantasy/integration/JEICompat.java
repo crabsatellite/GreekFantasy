@@ -1,5 +1,7 @@
 package greekfantasy.integration;
 
+// TODO: Re-enable when JEI is ready for 1.20.1
+/*
 import greekfantasy.GFRegistry;
 import greekfantasy.GreekFantasy;
 import greekfantasy.item.QuestItem;
@@ -30,3 +32,4 @@ public class JEICompat implements IModPlugin {
         });
     }
 }
+*/

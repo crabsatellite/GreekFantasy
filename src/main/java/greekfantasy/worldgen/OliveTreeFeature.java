@@ -40,7 +40,7 @@ public class OliveTreeFeature extends Feature<TreeConfiguration> {
         final StructureTemplate template = manager.getOrCreate(Util.getRandom(OLIVE_TREES, context.random()));
 
         // position for tree
-        final BlockPos offset = new BlockPos(-3, 0, -3);
+        final BlockPos offset = BlockPos.containing(-3, 0, -3);
         BlockPos pos = context.origin().offset(offset.rotate(rotation));
 
         // placement settings

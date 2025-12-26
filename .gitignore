@@ -24,3 +24,5 @@ src-todo
 
 # Files from Forge MDK
 forge*changelog.txt
+
+.vscode/

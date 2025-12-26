@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-
 public class QuestItem extends Item {
 
     private static final String QUEST_NAME = "quest.name";
@@ -32,26 +31,8 @@ public class QuestItem extends Item {
         super(properties);
     }
 
-    @Override
-    public void fillItemCategory(CreativeModeTab group, NonNullList<ItemStack> list) {
-        if (this.allowedIn(group)) {
-            List<ResourceLocation> questIds = new ArrayList<>();
-            // add each non-disabled quest to the list
-            for(Map.Entry<ResourceLocation, Quest> entry : GreekFantasy.QUEST_MAP.entrySet()) {
-                if(!entry.getValue().isDisabled()) {
-                    questIds.add(entry.getKey());
-                }
-            }
-            // sort by namespace and path
-            questIds.sort(ResourceLocation::compareNamespaced);
-            // add itemstack for each quest
-            for(ResourceLocation questId : questIds) {
-                ItemStack itemStack = new ItemStack(this);
-                itemStack.getOrCreateTag().putString(KEY_QUEST, questId.toString());
-                list.add(itemStack);
-            }
-        }
-    }
+    // In 1.20.1, fillItemCategory/allowedIn has been removed.
+    // Creative tab items should be added via BuildCreativeModeTabContentsEvent
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level worldIn, Player playerIn, InteractionHand handIn) {
@@ -59,16 +40,17 @@ public class QuestItem extends Item {
         // open GUI
         playerIn.startUsingItem(handIn);
         if (worldIn.isClientSide()) {
-            greekfantasy.client.screen.ScreenLoader.openQuestScreen(playerIn, playerIn.getInventory().selected, itemstack);
+            greekfantasy.client.screen.ScreenLoader.openQuestScreen(playerIn, playerIn.getInventory().selected,
+                    itemstack);
         }
         return InteractionResultHolder.consume(itemstack);
     }
 
     @Override
     public String getDescriptionId(ItemStack itemStack) {
-        if(itemStack.hasTag() && itemStack.getTag().contains(KEY_QUEST)) {
+        if (itemStack.hasTag() && itemStack.getTag().contains(KEY_QUEST)) {
             ResourceLocation questId = ResourceLocation.tryParse(itemStack.getTag().getString(KEY_QUEST));
-            if(questId != null) {
+            if (questId != null) {
                 return Quest.getDescriptionFromKey(questId);
             }
         }

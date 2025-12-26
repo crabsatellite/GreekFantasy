@@ -1,4 +1,5 @@
 package greekfantasy.entity;
+import net.minecraft.core.registries.Registries;
 
 import com.google.common.collect.ImmutableMap;
 import greekfantasy.GFRegistry;
@@ -145,7 +146,7 @@ public class Naiad extends PathfinderMob implements RangedAttackMob, NeutralMob 
             this.setPose(Pose.STANDING);
         }
         // check potion effects
-        if (!level.isClientSide() && level instanceof ServerLevel serverLevel
+        if (!level().isClientSide() && level() instanceof ServerLevel serverLevel
                 && this.getVariant() == Variant.OCEAN
                 && this.getEffect(GFRegistry.MobEffectReg.CURSE_OF_CIRCE.get()) != null) {
             // spawn scylla
@@ -242,7 +243,7 @@ public class Naiad extends PathfinderMob implements RangedAttackMob, NeutralMob 
     public void readAdditionalSaveData(CompoundTag compound) {
         super.readAdditionalSaveData(compound);
         this.setVariant(getVariantByName(compound.getString(KEY_VARIANT)));
-        this.readPersistentAngerSaveData(this.level, compound);
+        this.readPersistentAngerSaveData(this.level(), compound);
     }
 
     @Override
@@ -336,7 +337,7 @@ public class Naiad extends PathfinderMob implements RangedAttackMob, NeutralMob 
 
     @Override
     public void updateSwimming() {
-        if (!this.level.isClientSide) {
+        if (!this.level().isClientSide) {
             if (this.isEffectiveAi() && this.isInWater()) {
                 this.navigation = this.waterNavigation;
                 this.setSwimming(true);
@@ -349,14 +350,14 @@ public class Naiad extends PathfinderMob implements RangedAttackMob, NeutralMob 
 
     @Override
     public void performRangedAttack(LivingEntity target, float distanceFactor) {
-        ThrownTrident throwntrident = new ThrownTrident(this.level, this, new ItemStack(Items.TRIDENT));
+        ThrownTrident throwntrident = new ThrownTrident(this.level(), this, new ItemStack(Items.TRIDENT));
         double d0 = target.getX() - this.getX();
         double d1 = target.getY(0.33D) - throwntrident.getY();
         double d2 = target.getZ() - this.getZ();
         double d3 = Math.sqrt(d0 * d0 + d2 * d2);
-        throwntrident.shoot(d0, d1 + d3 * (double) 0.2F, d2, 1.6F, (float) (14 - this.level.getDifficulty().getId() * 4));
+        throwntrident.shoot(d0, d1 + d3 * (double) 0.2F, d2, 1.6F, (float) (14 - this.level().getDifficulty().getId() * 4));
         this.playSound(SoundEvents.TRIDENT_THROW, 1.0F, 1.0F / (this.getRandom().nextFloat() * 0.4F + 0.8F));
-        this.level.addFreshEntity(throwntrident);
+        this.level().addFreshEntity(throwntrident);
     }
 
     public static class Variant implements StringRepresentable {

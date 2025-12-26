@@ -124,7 +124,7 @@ public class Makhai extends TamableAnimal {
         }
 
         // determine when to despawn
-        if (!level.isClientSide() && !this.isNoAi() && (getTarget() == null || getNavigation().isDone()) && !isDespawning() && random.nextInt(280) == 0) {
+        if (!level().isClientSide() && !this.isNoAi() && (getTarget() == null || getNavigation().isDone()) && !isDespawning() && random.nextInt(280) == 0) {
             setDespawning(true);
         }
 
@@ -135,20 +135,20 @@ public class Makhai extends TamableAnimal {
         super.tick();
 
         // spawn particles
-        if (level.isClientSide() && (isSpawning() || isDespawning())) {
+        if (level().isClientSide() && (isSpawning() || isDespawning())) {
             final double x = this.getX();
             final double y = this.getY() + 0.5D;
             final double z = this.getZ();
             final double motion = 0.06D;
             final double radius = this.getBbWidth() * 1.15D;
             for (int i = 0; i < 4; i++) {
-                level.addParticle(ParticleTypes.LARGE_SMOKE,
-                        x + (level.random.nextDouble() - 0.5D) * radius,
-                        y + (level.random.nextDouble() - 0.5D) * radius,
-                        z + (level.random.nextDouble() - 0.5D) * radius,
-                        (level.random.nextDouble() - 0.5D) * motion,
-                        (level.random.nextDouble() - 0.5D) * 0.07D,
-                        (level.random.nextDouble() - 0.5D) * motion);
+                level().addParticle(ParticleTypes.LARGE_SMOKE,
+                        x + (level().random.nextDouble() - 0.5D) * radius,
+                        y + (level().random.nextDouble() - 0.5D) * radius,
+                        z + (level().random.nextDouble() - 0.5D) * radius,
+                        (level().random.nextDouble() - 0.5D) * motion,
+                        (level().random.nextDouble() - 0.5D) * 0.07D,
+                        (level().random.nextDouble() - 0.5D) * motion);
             }
         }
     }
@@ -202,8 +202,8 @@ public class Makhai extends TamableAnimal {
         if(spawning) {
             spawnTime = maxSpawnTime;
             setState(SPAWNING);
-            if(!this.level.isClientSide()) {
-                this.level.broadcastEntityEvent(this, SPAWN_EVENT);
+            if(!this.level().isClientSide()) {
+                this.level().broadcastEntityEvent(this, SPAWN_EVENT);
             }
         } else {
             spawnTime = 0;
@@ -215,8 +215,8 @@ public class Makhai extends TamableAnimal {
         if(despawning) {
             despawnTime = maxSpawnTime;
             setState(DESPAWNING);
-            if(!this.level.isClientSide()) {
-                this.level.broadcastEntityEvent(this, DESPAWN_EVENT);
+            if(!this.level().isClientSide()) {
+                this.level().broadcastEntityEvent(this, DESPAWN_EVENT);
             }
         } else {
             despawnTime = 0;

@@ -21,6 +21,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -139,7 +140,7 @@ public class BronzeBull extends Monster implements HasCustomCooldown {
         // boss info
         this.bossInfo.setProgress(this.getHealth() / this.getMaxHealth());
 
-        if(!level.isClientSide()) {
+        if(!level().isClientSide()) {
             this.tickCustomCooldown();
         }
 
@@ -175,24 +176,24 @@ public class BronzeBull extends Monster implements HasCustomCooldown {
         }
 
         // spawn particles
-        if (level.isClientSide() && this.isFiring()) {
+        if (level().isClientSide() && this.isFiring()) {
             spawnFireParticles();
         }
 
         // spawn particles
-        if (this.level.isClientSide()) {
+        if (this.level().isClientSide()) {
             final double x = this.getX();
             final double y = this.getY() + 1.25D;
             final double z = this.getZ();
             final double motion = 0.06D;
             final double radius = this.getBbWidth() * 1.15D;
-            level.addParticle(ParticleTypes.LAVA,
-                    x + (level.random.nextDouble() - 0.5D) * radius,
-                    y + (level.random.nextDouble() - 0.5D) * radius,
-                    z + (level.random.nextDouble() - 0.5D) * radius,
-                    (level.random.nextDouble() - 0.5D) * motion,
-                    (level.random.nextDouble() - 0.5D) * 0.07D,
-                    (level.random.nextDouble() - 0.5D) * motion);
+            level().addParticle(ParticleTypes.LAVA,
+                    x + (level().random.nextDouble() - 0.5D) * radius,
+                    y + (level().random.nextDouble() - 0.5D) * radius,
+                    z + (level().random.nextDouble() - 0.5D) * radius,
+                    (level().random.nextDouble() - 0.5D) * motion,
+                    (level().random.nextDouble() - 0.5D) * 0.07D,
+                    (level().random.nextDouble() - 0.5D) * motion);
         }
     }
 
@@ -256,7 +257,7 @@ public class BronzeBull extends Monster implements HasCustomCooldown {
 
     @Override
     public boolean isInvulnerableTo(final DamageSource source) {
-        return isSpawning() || source.isMagic() || source == DamageSource.DROWN || source == DamageSource.IN_WALL || source == DamageSource.WITHER
+        return isSpawning() || (source.is(DamageTypes.MAGIC) || source.is(DamageTypes.INDIRECT_MAGIC)) || source.is(DamageTypes.DROWN) || source.is(DamageTypes.IN_WALL) || source.is(DamageTypes.WITHER)
                 || source.getDirectEntity() instanceof AbstractArrow || super.isInvulnerableTo(source);
     }
 
@@ -307,7 +308,7 @@ public class BronzeBull extends Monster implements HasCustomCooldown {
     }
 
     public void spawnFireParticles() {
-        if (!level.isClientSide()) {
+        if (!level().isClientSide()) {
             return;
         }
         Vec3 lookVec = this.getLookAngle();
@@ -316,10 +317,10 @@ public class BronzeBull extends Monster implements HasCustomCooldown {
         final double radius = 0.75D;
 
         for (int i = 0; i < 5; i++) {
-            level.addParticle(ParticleTypes.FLAME,
-                    pos.x + (level.random.nextDouble() - 0.5D) * radius,
-                    pos.y + (level.random.nextDouble() - 0.5D) * radius,
-                    pos.z + (level.random.nextDouble() - 0.5D) * radius,
+            level().addParticle(ParticleTypes.FLAME,
+                    pos.x + (level().random.nextDouble() - 0.5D) * radius,
+                    pos.y + (level().random.nextDouble() - 0.5D) * radius,
+                    pos.z + (level().random.nextDouble() - 0.5D) * radius,
                     lookVec.x * motion * FIRE_RANGE,
                     lookVec.y * motion * 0.5D,
                     lookVec.z * motion * FIRE_RANGE);
@@ -353,16 +354,16 @@ public class BronzeBull extends Monster implements HasCustomCooldown {
     public void setFiring(final boolean firing) {
         firingTime = firing ? MAX_FIRING_TIME : 0;
         setState(firing ? FIRING : NONE);
-        if (firing && !this.level.isClientSide()) {
-            this.level.broadcastEntityEvent(this, FIRING_EVENT);
+        if (firing && !this.level().isClientSide()) {
+            this.level().broadcastEntityEvent(this, FIRING_EVENT);
         }
     }
 
     public void setGoring(final boolean goring) {
         goringTime = goring ? MAX_GORING_TIME : 0;
         setState(goring ? GORING : NONE);
-        if (goring && !this.level.isClientSide()) {
-            this.level.broadcastEntityEvent(this, GORING_EVENT);
+        if (goring && !this.level().isClientSide()) {
+            this.level().broadcastEntityEvent(this, GORING_EVENT);
             // break intersecting blocks
             destroyIntersectingBlocks(1.45F + 0.75F * random.nextFloat(), 2.0D);
         }
@@ -371,8 +372,8 @@ public class BronzeBull extends Monster implements HasCustomCooldown {
     public void setSpawning(final boolean spawning) {
         spawnTime = spawning ? MAX_SPAWN_TIME : 0;
         setState(spawning ? SPAWNING : NONE);
-        if (spawning && !this.level.isClientSide()) {
-            this.level.broadcastEntityEvent(this, SPAWN_EVENT);
+        if (spawning && !this.level().isClientSide()) {
+            this.level().broadcastEntityEvent(this, SPAWN_EVENT);
         }
     }
 
@@ -427,15 +428,15 @@ public class BronzeBull extends Monster implements HasCustomCooldown {
      * @param offset the forward distance to offset the bounding box
      **/
     private void destroyIntersectingBlocks(final float maxHardness, final double offset) {
-        if (!level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)) {
+        if (!level().getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)) {
             return;
         }
         final Vec3 facing = Vec3.directionFromRotation(this.getRotationVector());
         final AABB box = this.getBoundingBox().move(facing.normalize().scale(offset));
         BlockPos.betweenClosedStream(box).forEach(p -> {
-            BlockState b = this.level.getBlockState(p);
-            if ((b.canOcclude() || b.getMaterial().blocksMotion()) && b.getDestroySpeed(level, p) < maxHardness && !b.is(BlockTags.WITHER_IMMUNE)) {
-                this.level.destroyBlock(p, true);
+            BlockState b = this.level().getBlockState(p);
+            if ((b.canOcclude() || b.blocksMotion()) && b.getDestroySpeed(this.level(), p) < maxHardness && !b.is(BlockTags.WITHER_IMMUNE)) {
+                this.level().destroyBlock(p, true);
             }
         });
     }

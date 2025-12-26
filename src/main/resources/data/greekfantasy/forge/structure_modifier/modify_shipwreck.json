@@ -3,7 +3,7 @@
   "category": "monster",
   "spawn": {
     "type": "greekfantasy:siren",
-    "minCount": -2,
+    "minCount": 1,
     "maxCount": 1,
     "weight": 10
   },

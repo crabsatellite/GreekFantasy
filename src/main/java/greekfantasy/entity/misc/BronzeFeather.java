@@ -2,8 +2,8 @@ package greekfantasy.entity.misc;
 
 import greekfantasy.GFRegistry;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -46,7 +46,7 @@ public class BronzeFeather extends ThrowableItemProjectile {
     protected void onHitEntity(EntityHitResult raytrace) {
         super.onHitEntity(raytrace);
         final float damage = 1.0F;
-        raytrace.getEntity().hurt(DamageSource.thrown(this, getOwner()).bypassArmor(), damage);
+        raytrace.getEntity().hurt(this.damageSources().thrown(this, getOwner()), damage);
         discard();
     }
 
@@ -58,14 +58,14 @@ public class BronzeFeather extends ThrowableItemProjectile {
     @Override
     public Entity changeDimension(ServerLevel serverWorld, ITeleporter iTeleporter) {
         Entity entity = getOwner();
-        if (entity != null && entity.level.dimension() != serverWorld.dimension()) {
+        if (entity != null && entity.level().dimension() != serverWorld.dimension()) {
             setOwner(null);
         }
         return super.changeDimension(serverWorld, iTeleporter);
     }
 
     @Override
-    public Packet<?> getAddEntityPacket() {
+    public Packet<ClientGamePacketListener> getAddEntityPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
     }
 

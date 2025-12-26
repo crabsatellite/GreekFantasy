@@ -96,7 +96,7 @@ public abstract class SwirlGoal extends Goal {
             // try to break boats
             if (e instanceof Boat) {
                 if (breakBoats && entity.getRandom().nextInt(8) == 0) {
-                    e.hurt(DamageSource.mobAttack(entity), 3.0F);
+                    e.hurt(entity.damageSources().mobAttack(entity), 3.0F);
                 }
                 continue;
             }
@@ -131,7 +131,7 @@ public abstract class SwirlGoal extends Goal {
 
 
     protected static List<Entity> getEntitiesInRange(final LivingEntity entity, final double range, final Predicate<Entity> predicate) {
-        return entity.level.getEntities(entity, entity.getBoundingBox().inflate(range, range / 2, range), predicate);
+        return entity.level().getEntities(entity, entity.getBoundingBox().inflate(range, range / 2, range), predicate);
     }
 
     protected static void swirlEntity(final Entity entity, final double range, final float deltaAngle, final Entity target, final double disSq) {

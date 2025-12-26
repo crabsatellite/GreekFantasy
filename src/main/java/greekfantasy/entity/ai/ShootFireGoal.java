@@ -109,7 +109,7 @@ public class ShootFireGoal extends Goal {
             scaled = startPos.add(vecDifference.scale(i));
             // make a box at this position along the vector
             aabb = new AABB(scaled.x - radius, scaled.y - radius, scaled.z - radius, scaled.x + radius, scaled.y + radius, scaled.z + radius);
-            for (final Entity e : entity.level.getEntities(entity, aabb)) {
+            for (final Entity e : entity.level().getEntities(entity, aabb)) {
                 // set fire to any entities inside the box
                 e.setSecondsOnFire(randFireTime);
             }

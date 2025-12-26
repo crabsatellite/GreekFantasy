@@ -21,7 +21,7 @@ public class SpartiRenderer<T extends Sparti> extends HumanoidMobRenderer<T, Ske
 
     public SpartiRenderer(EntityRendererProvider.Context context, ModelLayerLocation model, ModelLayerLocation innerArmor, ModelLayerLocation outerArmor) {
         super(context, new SkeletonModel<>(context.bakeLayer(model)), 0.5F);
-        this.addLayer(new HumanoidArmorLayer<>(this, new SkeletonModel<>(context.bakeLayer(innerArmor)), new SkeletonModel<>(context.bakeLayer(outerArmor))));
+        this.addLayer(new HumanoidArmorLayer<>(this, new SkeletonModel<>(context.bakeLayer(innerArmor)), new SkeletonModel<>(context.bakeLayer(outerArmor)), context.getModelManager()));
         this.addLayer(new SpartiClothingLayer<>(this, context.getModelSet()));
     }
 

@@ -1,12 +1,14 @@
 package greekfantasy.client.entity.layer;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Vector3f;
+import org.joml.Vector3f;
+import com.mojang.math.Axis;
 import greekfantasy.client.entity.model.AraModel;
 import greekfantasy.entity.monster.Ara;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -40,12 +42,12 @@ public class AraFlintLayer<T extends Ara> extends RenderLayer<T, AraModel<T>> {
             // transforms
             this.getParentModel().body.translateAndRotate(poseStack);
             poseStack.translate(tx, ty, tz);
-            poseStack.mulPose(Vector3f.YP.rotationDegrees(180.0F));
+            poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
             poseStack.scale(scale, -scale, -scale);
-            poseStack.mulPose(Vector3f.YP.rotationDegrees(spin));
+            poseStack.mulPose(Axis.YP.rotationDegrees(spin));
             // render the item stack
-            Minecraft.getInstance().getItemRenderer().renderStatic(itemStack, ItemTransforms.TransformType.FIXED,
-                    packedLight, OverlayTexture.NO_OVERLAY, poseStack, multiBufferSource, 0);
+            Minecraft.getInstance().getItemRenderer().renderStatic(itemStack, ItemDisplayContext.FIXED,
+                    packedLight, OverlayTexture.NO_OVERLAY, poseStack, multiBufferSource, entity.level(), entity.getId());
             // finish rendering
             poseStack.popPose();
         }

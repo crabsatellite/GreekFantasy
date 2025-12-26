@@ -1,4 +1,5 @@
 package greekfantasy.util;
+import net.minecraft.core.registries.Registries;
 
 import greekfantasy.GFRegistry;
 import greekfantasy.GreekFantasy;
@@ -18,9 +19,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.pattern.BlockInWorld;
 import net.minecraft.world.level.block.state.pattern.BlockPattern;
 import net.minecraft.world.level.block.state.pattern.BlockPatternBuilder;
-import net.minecraft.world.level.block.state.predicate.BlockMaterialPredicate;
+
 import net.minecraft.world.level.block.state.predicate.BlockStatePredicate;
-import net.minecraft.world.level.material.Material;
+
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -40,7 +41,7 @@ public final class SummonBossUtil {
             .aisle("~^~", "###", "###")
             .where('^', BlockInWorld.hasState(state -> state.is(BRONZE_BLOCK)))
             .where('#', BlockInWorld.hasState(state -> state.is(COPPER_BLOCK)))
-            .where('~', BlockInWorld.hasState(BlockMaterialPredicate.forMaterial(Material.AIR))).build();
+            .where('~', BlockInWorld.hasState(BlockStatePredicate.forBlock(Blocks.AIR).or(BlockStatePredicate.forBlock(Blocks.CAVE_AIR)).or(BlockStatePredicate.forBlock(Blocks.VOID_AIR)))).build();
 
     /**
      * BlockPattern for Bronze Bull boss
@@ -50,7 +51,7 @@ public final class SummonBossUtil {
             .aisle("~##~", "~##~")
             .where('^', BlockInWorld.hasState(state -> state.is(BRONZE_BLOCK)))
             .where('#', BlockInWorld.hasState(state -> state.is(COPPER_BLOCK)))
-            .where('~', BlockInWorld.hasState(BlockMaterialPredicate.forMaterial(Material.AIR))).build();
+            .where('~', BlockInWorld.hasState(BlockStatePredicate.forBlock(Blocks.AIR).or(BlockStatePredicate.forBlock(Blocks.CAVE_AIR)).or(BlockStatePredicate.forBlock(Blocks.VOID_AIR)))).build();
 
     /**
      * BlockPattern for Cerberus boss
@@ -62,7 +63,7 @@ public final class SummonBossUtil {
             .aisle("~##~", "~~~~", "~~~~")
             .where('#', BlockInWorld.hasState(state -> state.is(CERBERUS_FRAME)))
             .where('^', BlockInWorld.hasState(state -> state.is(Blocks.LAVA)))
-            .where('O', BlockInWorld.hasState(BlockMaterialPredicate.forMaterial(Material.AIR)))
+            .where('O', BlockInWorld.hasState(BlockStatePredicate.forBlock(Blocks.AIR).or(BlockStatePredicate.forBlock(Blocks.CAVE_AIR)).or(BlockStatePredicate.forBlock(Blocks.VOID_AIR))))
             .where('~', BlockInWorld.hasState(state -> true)).build();
 
     /**

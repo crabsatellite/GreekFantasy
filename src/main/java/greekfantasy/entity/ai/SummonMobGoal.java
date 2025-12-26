@@ -95,11 +95,11 @@ public class SummonMobGoal<T extends Mob> extends Goal {
     }
 
     protected T summonMob() {
-        final T mobEntity = mobEntityType.create(summoner.level);
+        final T mobEntity = mobEntityType.create(summoner.level());
         mobEntity.copyPosition(summoner);
         mobEntity.setLastHurtByMob(summoner.getLastHurtByMob());
         mobEntity.setTarget(summoner.getTarget());
-        summoner.level.addFreshEntity(mobEntity);
+        summoner.level().addFreshEntity(mobEntity);
         return mobEntity;
     }
 

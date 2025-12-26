@@ -40,7 +40,7 @@ public class GFBegGoal extends Goal {
     public boolean canUse() {
         if (mob.tickCount % interval == 0) {
             // find a player within range to cause begging
-            final List<Player> list = mob.level.getEntitiesOfClass(Player.class, mob.getBoundingBox().inflate(range), hasBegItem);
+            final List<Player> list = mob.level().getEntitiesOfClass(Player.class, mob.getBoundingBox().inflate(range), hasBegItem);
             if (!list.isEmpty()) {
                 player = list.get(0);
             } else {

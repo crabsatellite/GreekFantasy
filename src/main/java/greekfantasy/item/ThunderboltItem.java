@@ -57,7 +57,7 @@ public class ThunderboltItem extends Item {
                 // if enchanted with fireflash, cause an explosion
                 if (fireflash) {
                     damageAmount = GreekFantasy.CONFIG.THUNDERBOLT_DURABILITY_ON_FIREFLASH.get();
-                    final Explosion.BlockInteraction mode = GreekFantasy.CONFIG.FIREFLASH_DESTROYS_BLOCKS.get() ? Explosion.BlockInteraction.DESTROY : Explosion.BlockInteraction.NONE;
+                    final Level.ExplosionInteraction mode = GreekFantasy.CONFIG.FIREFLASH_DESTROYS_BLOCKS.get() ? Level.ExplosionInteraction.MOB : Level.ExplosionInteraction.NONE;
                     level.explode(player, raytrace.getLocation().x(), raytrace.getLocation().y(), raytrace.getLocation().z(), fireflashLevel * 1.64F, true, mode);
                 }
                 // cooldown and item damage
@@ -94,6 +94,6 @@ public class ThunderboltItem extends Item {
         float cosPitch = -Mth.cos(pitch);
         float sinPitch = Mth.sin(pitch);
         final Vec3 endVec = startVec.add(sinYaw * cosPitch * range, sinPitch * range, cosYaw * cosPitch * range);
-        return player.level.clip(new ClipContext(startVec, endVec, ClipContext.Block.OUTLINE, fluidMode, player));
+        return player.level().clip(new ClipContext(startVec, endVec, ClipContext.Block.OUTLINE, fluidMode, player));
     }
 }

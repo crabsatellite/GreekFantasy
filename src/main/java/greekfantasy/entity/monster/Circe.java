@@ -1,5 +1,6 @@
 package greekfantasy.entity.monster;
 
+import net.minecraft.tags.DamageTypeTags;
 import greekfantasy.GFRegistry;
 import greekfantasy.GreekFantasy;
 import greekfantasy.entity.ai.IntervalRangedAttackGoal;
@@ -88,7 +89,7 @@ public class Circe extends Monster implements RangedAttackMob {
         // boss info
         this.bossInfo.setProgress(this.getHealth() / this.getMaxHealth());
         // apply potion effect to self
-        if (this.random.nextFloat() < 0.15F && (this.isOnFire() || this.getLastDamageSource() != null && this.getLastDamageSource().isFire()) && !this.hasEffect(MobEffects.FIRE_RESISTANCE)) {
+        if (this.random.nextFloat() < 0.15F && (this.isOnFire() || this.getLastDamageSource() != null && this.getLastDamageSource().is(DamageTypeTags.IS_FIRE)) && !this.hasEffect(MobEffects.FIRE_RESISTANCE)) {
             this.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 900));
         }
     }
@@ -113,9 +114,9 @@ public class Circe extends Monster implements RangedAttackMob {
 
     @Override
     public void performRangedAttack(LivingEntity arg0, float arg1) {
-        if (!level.isClientSide()) {
-            CurseOfCirce spell = CurseOfCirce.create(level, this);
-            level.addFreshEntity(spell);
+        if (!level().isClientSide()) {
+            CurseOfCirce spell = CurseOfCirce.create(level(), this);
+            level().addFreshEntity(spell);
         }
         this.playSound(SoundEvents.ILLUSIONER_CAST_SPELL, 1.2F, 1.0F);
         // swing arm

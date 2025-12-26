@@ -39,7 +39,7 @@ public class WingedSandalsItem extends ArmorItem {
     protected Multimap<Attribute, AttributeModifier> attributeModifiers;
 
     public WingedSandalsItem(final ArmorMaterial armorMaterial, Properties builderIn) {
-        super(armorMaterial, EquipmentSlot.FEET, builderIn);
+        super(armorMaterial, ArmorItem.Type.BOOTS, builderIn);
         final double speedBonus = 1.5F;
         final double stepHeightBonus = 0.62F;
         ImmutableMultimap.Builder<Attribute, AttributeModifier> builder = ImmutableMultimap.builder();
@@ -63,18 +63,6 @@ public class WingedSandalsItem extends ArmorItem {
             if (level.getRandom().nextFloat() < GreekFantasy.CONFIG.getWingedSandalsDurabilityChance()) {
                 stack.hurtAndBreak(1, livingEntity, e -> e.broadcastBreakEvent(EquipmentSlot.FEET));
             }
-        }
-    }
-
-    @Override
-    public void fillItemCategory(CreativeModeTab group, NonNullList<ItemStack> items) {
-        // add the item to the group with enchantment already applied
-        if (this.allowedIn(group)) {
-            final ItemStack stack = new ItemStack(this);
-            if (GreekFantasy.CONFIG.isOverstepEnabled()) {
-                stack.enchant(GFRegistry.EnchantmentReg.OVERSTEP.get(), 1);
-            }
-            items.add(stack);
         }
     }
 
@@ -111,7 +99,7 @@ public class WingedSandalsItem extends ArmorItem {
         }
         // add jump boost tooltip
         tooltip.add(Component.translatable(MobEffects.JUMP.getDescriptionId()).withStyle(ChatFormatting.AQUA)
-                .append(" ").append(Component.translatable("enchantment.level.5").withStyle(ChatFormatting.AQUA)));
+                .append(" ").append(Component.translatable("enchantment.level().5").withStyle(ChatFormatting.AQUA)));
 
     }
 

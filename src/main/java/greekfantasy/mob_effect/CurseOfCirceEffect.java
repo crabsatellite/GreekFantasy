@@ -25,8 +25,8 @@ public class CurseOfCirceEffect extends MobEffect {
         this.addAttributeModifier(Attributes.MAX_HEALTH, UUID_HEALTH.toString(), HEALTH_MODIFIER, AttributeModifier.Operation.ADDITION);
         this.addAttributeModifier(Attributes.ATTACK_DAMAGE, UUID_ATTACK.toString(), -0.5D, AttributeModifier.Operation.MULTIPLY_TOTAL);
         this.addAttributeModifier(Attributes.ATTACK_KNOCKBACK, UUID_KNOCKBACK.toString(), -0.8D, AttributeModifier.Operation.MULTIPLY_TOTAL);
-        this.addAttributeModifier(ForgeMod.ATTACK_RANGE.get(), UUID_ATTACK_RANGE.toString(), -1.0D, AttributeModifier.Operation.ADDITION);
-        this.addAttributeModifier(ForgeMod.REACH_DISTANCE.get(), UUID_REACH_DISTANCE.toString(), -1.0D, AttributeModifier.Operation.ADDITION);
+        this.addAttributeModifier(ForgeMod.ENTITY_REACH.get(), UUID_ATTACK_RANGE.toString(), -1.0D, AttributeModifier.Operation.ADDITION);
+        this.addAttributeModifier(ForgeMod.BLOCK_REACH.get(), UUID_REACH_DISTANCE.toString(), -1.0D, AttributeModifier.Operation.ADDITION);
         this.addAttributeModifier(ForgeMod.SWIM_SPEED.get(), SWIM_SPEED_MODIFIER.toString(), -0.5D, AttributeModifier.Operation.MULTIPLY_TOTAL);
     }
 }

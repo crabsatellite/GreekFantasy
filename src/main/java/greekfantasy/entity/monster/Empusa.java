@@ -67,12 +67,12 @@ public class Empusa extends Monster {
     public void aiStep() {
         super.aiStep();
         // hurt in daytime, then remove when at half health if not currently attacking
-        if (!this.level.isClientSide() && this.level.isDay() && this.hurtTime == 0 && this.tickCount % 24 == 0) {
-            this.hurt(DamageSource.STARVE, 2.0F);
+        if (!this.level().isClientSide() && this.level().isDay() && this.hurtTime == 0 && this.tickCount % 24 == 0) {
+            this.hurt(this.damageSources().starve(), 2.0F);
         }
 
         // spawn particles
-        if (level.isClientSide() && this.isDraining()) {
+        if (level().isClientSide() && this.isDraining()) {
             particleRay();
         }
     }
@@ -100,8 +100,8 @@ public class Empusa extends Monster {
 
     public void setDraining(final boolean draining) {
         this.isDraining = draining;
-        if (!this.level.isClientSide()) {
-            this.level.broadcastEntityEvent(this, draining ? DRAINING_START : DRAINING_END);
+        if (!this.level().isClientSide()) {
+            this.level().broadcastEntityEvent(this, draining ? DRAINING_START : DRAINING_END);
         }
     }
 
@@ -122,10 +122,10 @@ public class Empusa extends Monster {
             final double y = pos.y + scaled.y;
             final double z = pos.z + scaled.z;
             final AABB aabb = new AABB(x - 0.1D, y - 0.1D, z - 0.1D, x + 0.1D, y + 0.1D, z + 0.1D);
-            if (!this.level.getEntities(this, aabb).isEmpty()) {
+            if (!this.level().getEntities(this, aabb).isEmpty()) {
                 return;
             }
-            this.level.addParticle(ParticleTypes.CRIT, x, y, z, 0, 0, 0);
+            this.level().addParticle(ParticleTypes.CRIT, x, y, z, 0, 0, 0);
         }
     }
 
@@ -164,7 +164,7 @@ public class Empusa extends Monster {
         @Override
         public void start() {
             this.drainingTime = MAX_DRAIN_TIME;
-            if(entity.level.getCurrentDifficultyAt(entity.blockPosition()).isHard()) {
+            if(entity.level().getCurrentDifficultyAt(entity.blockPosition()).isHard()) {
                 this.drainingTime += HARD_DELTA_DRAIN_TIME;
             }
             this.entity.setDraining(true);
@@ -179,7 +179,7 @@ public class Empusa extends Monster {
                 this.entity.lookAt(this.entity.getTarget(), 100.0F, 100.0F);
                 // drain health from targetPos
                 if (drainingTime > (MAX_DRAIN_TIME / 3) && this.entity.getTarget().hurtTime == 0) {
-                    final DamageSource src = DamageSource.indirectMagic(this.entity, this.entity);
+                    final DamageSource src = this.entity.damageSources().indirectMagic(this.entity, this.entity);
                     float amount = (float) this.entity.getAttribute(Attributes.ATTACK_DAMAGE).getValue() * 0.5F;
                     if (this.entity.getTarget().hurt(src, amount)) {
                         this.entity.heal(amount * 1.5F);
@@ -195,7 +195,7 @@ public class Empusa extends Monster {
             this.entity.setDraining(false);
             this.drainingTime = 0;
             this.cooldown = MAX_COOLDOWN;
-            if(entity.level.getCurrentDifficultyAt(entity.blockPosition()).isHard()) {
+            if(entity.level().getCurrentDifficultyAt(entity.blockPosition()).isHard()) {
                 this.cooldown += HARD_DELTA_COOLDOWN;
             }
         }

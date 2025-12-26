@@ -3,6 +3,7 @@ package greekfantasy.network;
 import com.mojang.serialization.Codec;
 import greekfantasy.GreekFantasy;
 import greekfantasy.util.Song;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
@@ -43,7 +44,7 @@ public class SSongPacket {
      * @return a new instance of a SSongPacket based on the PacketBuffer
      */
     public static SSongPacket fromBytes(final FriendlyByteBuf buf) {
-        final Map<ResourceLocation, Song> data = buf.readWithCodec(CODEC);
+        final Map<ResourceLocation, Song> data = buf.readWithCodec(NbtOps.INSTANCE, CODEC);
         return new SSongPacket(data);
     }
 
@@ -54,7 +55,7 @@ public class SSongPacket {
      * @param buf the PacketBuffer
      */
     public static void toBytes(final SSongPacket msg, final FriendlyByteBuf buf) {
-        buf.writeWithCodec(CODEC, msg.data);
+        buf.writeWithCodec(NbtOps.INSTANCE, CODEC, msg.data);
     }
 
     /**

@@ -14,6 +14,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
@@ -76,9 +77,8 @@ public interface TradingMob {
      * @return a list of result items
      */
     default List<ItemStack> getTradeResult(final PathfinderMob self, @Nullable final Player player, final ItemStack tradeItem) {
-        LootTable loottable = self.level.getServer().getLootTables().get(this.getTradeLootTable());
-        return loottable.getRandomItems(new LootContext.Builder((ServerLevel) self.level)
-                .withRandom(self.level.random)
+        LootTable loottable = self.level().getServer().getLootData().getLootTable(this.getTradeLootTable());
+        return loottable.getRandomItems(new LootParams.Builder((ServerLevel) self.level())
                 .withParameter(LootContextParams.THIS_ENTITY, self)
                 .withParameter(LootContextParams.ORIGIN, self.position())
                 .withParameter(LootContextParams.TOOL, tradeItem)
@@ -105,7 +105,7 @@ public interface TradingMob {
         }
         // spawn xp orb
         if (player != null && self.getRandom().nextInt(3) == 0) {
-            self.level.addFreshEntity(new ExperienceOrb(self.level, self.getX(), self.getY(), self.getZ(), 1 + self.getRandom().nextInt(2)));
+            self.level().addFreshEntity(new ExperienceOrb(self.level(), self.getX(), self.getY(), self.getZ(), 1 + self.getRandom().nextInt(2)));
         }
     }
 
@@ -125,7 +125,7 @@ public interface TradingMob {
                 }
                 player.setItemInHand(hand, stack);
                 return InteractionResult.SUCCESS;
-            } else if (sendAngryParticlesOnFail() && self.level instanceof ServerLevel serverLevel) {
+            } else if (sendAngryParticlesOnFail() && self.level() instanceof ServerLevel serverLevel) {
                 serverLevel.sendParticles(ParticleTypes.ANGRY_VILLAGER, self.getX(), self.getEyeY(), self.getZ(), 4, 0, 0, 0, 0);
             }
         }

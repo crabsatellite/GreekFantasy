@@ -1,5 +1,6 @@
 package greekfantasy.entity.boss;
 
+import net.minecraft.tags.DamageTypeTags;
 import greekfantasy.GFRegistry;
 import greekfantasy.entity.util.GFMobType;
 import net.minecraft.core.particles.ParticleTypes;
@@ -11,6 +12,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -110,12 +112,12 @@ public class HydraHead extends Monster {
         super.aiStep();
 
         // remove when not linked to a hydra
-        if (!hasHydra() && !level.isClientSide()) {
+        if (!hasHydra() && !level().isClientSide()) {
             discard();
             return;
         }
 
-        if (!level.isClientSide() && getTarget() != null && null == getHydra().getTarget()) {
+        if (!level().isClientSide() && getTarget() != null && null == getHydra().getTarget()) {
             getHydra().setTarget(getTarget());
         }
 
@@ -137,13 +139,13 @@ public class HydraHead extends Monster {
     public void tick() {
         super.tick();
         // recalculate size
-        if (markForSizeChange || (this.level.isClientSide() && !this.isNormal())) {
+        if (markForSizeChange || (this.level().isClientSide() && !this.isNormal())) {
             refreshDimensions();
             markForSizeChange = false;
         }
 
-        if (level.isClientSide() && isCharred() && random.nextInt(5) == 0) {
-            level.addParticle(ParticleTypes.SMOKE,
+        if (level().isClientSide() && isCharred() && random.nextInt(5) == 0) {
+            level().addParticle(ParticleTypes.SMOKE,
                     getX() + (random.nextDouble() - 0.5D) * getBbWidth(),
                     getY() + getBbHeight(),
                     getZ() + (random.nextDouble() - 0.5D) * getBbWidth(), 0.0D, 0.0D, 0.0D);
@@ -152,8 +154,8 @@ public class HydraHead extends Monster {
 
     @Override
     public boolean isInvulnerableTo(final DamageSource source) {
-        return ((isSevered() || isGrowing()) && !source.isFire())
-                || isCharred() || source == DamageSource.IN_WALL || source == DamageSource.WITHER
+        return ((isSevered() || isGrowing()) && !source.is(DamageTypeTags.IS_FIRE))
+                || isCharred() || source.is(DamageTypes.IN_WALL) || source.is(DamageTypes.WITHER)
                 || super.isInvulnerableTo(source);
     }
 
@@ -170,14 +172,14 @@ public class HydraHead extends Monster {
             HydraHead head = getHydra().addHead(getHydra().getHeads());
             if(!head.isRemoved()) {
                 head.setSevered();
-                level.addFreshEntity(head);
+                level().addFreshEntity(head);
             }
         }
         // reset health to prevent removal
         this.setHealth(1.0F);
         this.markForSizeChange = true;
         this.refreshDimensions();
-        level.broadcastEntityEvent(this, CHANGE_SIZE_EVENT);
+        this.level().broadcastEntityEvent(this, CHANGE_SIZE_EVENT);
     }
 
     @Override
@@ -186,11 +188,11 @@ public class HydraHead extends Monster {
         // light this head on fire when flint and steel is used
         if (!itemstack.isEmpty() && itemstack.is(Items.FLINT_AND_STEEL)) {
             final Vec3 pos = this.position();
-            this.level.playSound(player, pos.x, pos.y, pos.z, SoundEvents.FLINTANDSTEEL_USE, this.getSoundSource(), 1.0F,
+            this.level().playSound(player, pos.x, pos.y, pos.z, SoundEvents.FLINTANDSTEEL_USE, this.getSoundSource(), 1.0F,
                     this.random.nextFloat() * 0.4F + 0.8F);
             player.swing(hand);
 
-            if (!this.level.isClientSide()) {
+            if (!this.level().isClientSide()) {
                 this.setSecondsOnFire(4 + random.nextInt(3));
                 itemstack.hurtAndBreak(1, player, c -> c.broadcastBreakEvent(hand));
             }
@@ -291,8 +293,8 @@ public class HydraHead extends Monster {
     public void setHeadState(final byte state) {
         this.getEntityData().set(STATE, state);
         this.markForSizeChange = true;
-        if (!level.isClientSide()) {
-            level.broadcastEntityEvent(this, CHANGE_SIZE_EVENT);
+        if (!level().isClientSide()) {
+            this.level().broadcastEntityEvent(this, CHANGE_SIZE_EVENT);
         }
     }
 
@@ -328,8 +330,8 @@ public class HydraHead extends Monster {
     public void setGrowing() {
         setHeadState(GROWING);
         growTime = 1;
-        if (!this.level.isClientSide()) {
-            this.level.broadcastEntityEvent(this, GROWING_EVENT);
+        if (!this.level().isClientSide()) {
+            this.level().broadcastEntityEvent(this, GROWING_EVENT);
         }
     }
 
@@ -409,7 +411,7 @@ public class HydraHead extends Monster {
 
         @Override
         public boolean canUse() {
-            long i = HydraHead.this.level.getGameTime();
+            long i = HydraHead.this.level().getGameTime();
             // do not execute if timer is too recent or head is severed/charred
             if (i - this.lastCheckTime < attackInterval || !HydraHead.this.isNormal()) {
                 return false;
@@ -468,7 +470,7 @@ public class HydraHead extends Monster {
             if (distToEnemySqr <= d0 && this.swingCooldown <= 0) {
                 this.swingCooldown = attackInterval;
                 HydraHead.this.swing(InteractionHand.MAIN_HAND);
-                HydraHead.this.level.broadcastEntityEvent(HydraHead.this, ATTACK_EVENT);
+                HydraHead.this.level().broadcastEntityEvent(HydraHead.this, ATTACK_EVENT);
                 HydraHead.this.doHurtTarget(enemy);
             }
         }

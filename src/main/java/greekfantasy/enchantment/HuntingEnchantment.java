@@ -1,4 +1,5 @@
 package greekfantasy.enchantment;
+import net.minecraft.core.registries.Registries;
 
 import greekfantasy.GreekFantasy;
 import greekfantasy.item.KnifeItem;
@@ -37,7 +38,7 @@ public class HuntingEnchantment extends Enchantment {
             // determine damage amount
             float amount = Math.min(99.0F, (animal.getMaxHealth() + animal.getArmorValue()) * 1.25F);
             // apply damage
-            DamageSource source = DamageSource.mobAttack(user).bypassArmor().bypassMagic();
+            DamageSource source = user.damageSources().mobAttack(user);
             target.hurt(source, amount);
         }
     }

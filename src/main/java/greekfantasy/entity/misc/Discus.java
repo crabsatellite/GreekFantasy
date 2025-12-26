@@ -3,9 +3,9 @@ package greekfantasy.entity.misc;
 import greekfantasy.GFRegistry;
 import greekfantasy.GreekFantasy;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -52,7 +52,7 @@ public class Discus extends ThrowableItemProjectile {
     protected void onHitEntity(EntityHitResult raytrace) {
         super.onHitEntity(raytrace);
         final float damage = (float) (this.getDeltaMovement().horizontalDistanceSqr() * 3.2D);
-        raytrace.getEntity().hurt(DamageSource.thrown(this, getOwner()), damage);
+        raytrace.getEntity().hurt(this.damageSources().thrown(this, getOwner()), damage);
     }
 
     @Override
@@ -60,8 +60,9 @@ public class Discus extends ThrowableItemProjectile {
         super.onHit(raytrace);
         if (random.nextFloat() < 0.028F && !(getOwner() instanceof Player player && player.isCreative())) {
             final Vec3 vec = raytrace.getLocation();
-            final ItemEntity item = new ItemEntity(this.level, vec.x, vec.y + 0.25D, vec.z, new ItemStack(getDefaultItem()));
-            this.level.addFreshEntity(item);
+            final ItemEntity item = new ItemEntity(this.level(), vec.x, vec.y + 0.25D, vec.z,
+                    new ItemStack(getDefaultItem()));
+            this.level().addFreshEntity(item);
         } else {
             this.playSound(SoundEvents.ITEM_BREAK, 1.0F, 1.0F + random.nextFloat() * 0.2F);
         }
@@ -89,14 +90,14 @@ public class Discus extends ThrowableItemProjectile {
     @Override
     public Entity changeDimension(ServerLevel serverLevel, ITeleporter iTeleporter) {
         Entity entity = this.getOwner();
-        if (entity != null && entity.level.dimension() != serverLevel.dimension()) {
+        if (entity != null && entity.level().dimension() != serverLevel.dimension()) {
             setOwner(null);
         }
         return super.changeDimension(serverLevel, iTeleporter);
     }
 
     @Override
-    public Packet<?> getAddEntityPacket() {
+    public Packet<ClientGamePacketListener> getAddEntityPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
     }
 

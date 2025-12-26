@@ -107,7 +107,7 @@ public class Arachne extends Monster implements RangedAttackMob {
 
     @Override
     public void performRangedAttack(LivingEntity target, float distanceFactor) {
-        WebBall web = WebBall.create(level, this);
+        WebBall web = WebBall.create(level(), this);
         // set the web type with sometimes web, always spider, and no item
         web.setWebType(getRandom().nextBoolean(), true, false);
         // this is copied from LlamaSpit code, it moves the arrow nearer to the centaur's human-body
@@ -118,9 +118,9 @@ public class Arachne extends Monster implements RangedAttackMob {
         double dy = target.getY(0.67D) - web.getY();
         double dz = target.getZ() - web.getZ();
         double dis = Math.sqrt(dx * dx + dz * dz);
-        web.shoot(dx, dy + dis * (double) 0.2F, dz, 1.14F, (float) (14 - this.level.getDifficulty().getId() * 4));
+        web.shoot(dx, dy + dis * (double) 0.2F, dz, 1.14F, (float) (14 - this.level().getDifficulty().getId() * 4));
         this.playSound(SoundEvents.LLAMA_SPIT, 1.0F, 1.0F / (this.getRandom().nextFloat() * 0.4F + 0.8F));
-        this.level.addFreshEntity(web);
+        this.level().addFreshEntity(web);
     }
 
     // Misc //

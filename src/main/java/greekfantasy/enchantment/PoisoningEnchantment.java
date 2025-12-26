@@ -1,4 +1,5 @@
 package greekfantasy.enchantment;
+import net.minecraft.core.registries.Registries;
 
 import greekfantasy.GFRegistry;
 import greekfantasy.GreekFantasy;

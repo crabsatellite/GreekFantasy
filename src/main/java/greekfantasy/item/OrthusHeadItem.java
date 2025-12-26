@@ -10,11 +10,11 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Wearable;
+import net.minecraft.world.item.Equipable;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 
-public class OrthusHeadItem extends BlockItem implements Wearable {
+public class OrthusHeadItem extends BlockItem implements Equipable {
 
     public OrthusHeadItem(Block block, Properties properties) {
         super(block, properties);
@@ -22,6 +22,11 @@ public class OrthusHeadItem extends BlockItem implements Wearable {
 
     @Override
     public EquipmentSlot getEquipmentSlot(ItemStack stack) {
+        return EquipmentSlot.HEAD;
+    }
+
+    @Override
+    public EquipmentSlot getEquipmentSlot() {
         return EquipmentSlot.HEAD;
     }
 

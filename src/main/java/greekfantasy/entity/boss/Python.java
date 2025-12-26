@@ -1,4 +1,5 @@
 package greekfantasy.entity.boss;
+import net.minecraft.core.registries.Registries;
 
 
 import greekfantasy.GreekFantasy;
@@ -16,6 +17,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.BossEvent;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -152,7 +154,7 @@ public class Python extends Monster implements RangedAttackMob {
 
     @Override
     public boolean isInvulnerableTo(final DamageSource source) {
-        return source == DamageSource.IN_WALL || source == DamageSource.WITHER || super.isInvulnerableTo(source);
+        return source.is(DamageTypes.IN_WALL) || source.is(DamageTypes.WITHER) || super.isInvulnerableTo(source);
     }
 
     @Override
@@ -277,9 +279,9 @@ public class Python extends Monster implements RangedAttackMob {
 
     @Override
     public void performRangedAttack(LivingEntity target, float distanceFactor) {
-        if (!level.isClientSide()) {
-            PoisonSpit healingSpell = PoisonSpit.create(level, this);
-            level.addFreshEntity(healingSpell);
+        if (!level().isClientSide()) {
+            PoisonSpit healingSpell = PoisonSpit.create(level(), this);
+            level().addFreshEntity(healingSpell);
         }
         this.playSound(SoundEvents.LLAMA_SPIT, 1.2F, 1.0F);
     }
@@ -302,7 +304,7 @@ public class Python extends Monster implements RangedAttackMob {
         public void start() {
             super.start();
             Python.this.setSpitAttack(true);
-            Python.this.level.broadcastEntityEvent(Python.this, SPIT_EVENT);
+            Python.this.level().broadcastEntityEvent(Python.this, SPIT_EVENT);
             Python.this.playSound(SoundEvents.CREEPER_PRIMED, 1.0F, 1.2F);
         }
 

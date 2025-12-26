@@ -109,8 +109,8 @@ public class ReedsBlock extends TallFlowerBlock implements SimpleWaterloggedBloc
         boolean hasSupport = state.is(Blocks.GRAVEL) || state.is(Blocks.SAND) || super.mayPlaceOn(state, level, pos);
         if (hasSupport) {
             final boolean nextToWater = isWater(level, pos.above()) || isNextToWater(level, pos);
-            final boolean belowReplaceable = level.getBlockState(pos.above(1)).getMaterial().isReplaceable()
-                    && level.getBlockState(pos.above(2)).getMaterial().isReplaceable()
+            final boolean belowReplaceable = level.getBlockState(pos.above(1)).canBeReplaced()
+                    && level.getBlockState(pos.above(2)).canBeReplaced()
                     && level.getFluidState(pos.above(2)).is(Fluids.EMPTY);
             return nextToWater && belowReplaceable;
         }

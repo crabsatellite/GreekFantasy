@@ -91,7 +91,7 @@ public class MazeStructure extends Structure {
     public Optional<GenerationStub> findGenerationPoint(Structure.GenerationContext context) {
         context.random().nextDouble();
         ChunkPos chunkpos = context.chunkPos();
-        BlockPos blockpos = new BlockPos(chunkpos.getMiddleBlockX(), 50, chunkpos.getMinBlockZ());
+        BlockPos blockpos = BlockPos.containing(chunkpos.getMiddleBlockX(), 50, chunkpos.getMinBlockZ());
         StructurePiecesBuilder structurepiecesbuilder = new StructurePiecesBuilder();
         int offsetY = this.generatePiecesAndAdjust(structurepiecesbuilder, context);
         return Optional.of(new Structure.GenerationStub(blockpos.offset(0, offsetY, 0), Either.right(structurepiecesbuilder)));

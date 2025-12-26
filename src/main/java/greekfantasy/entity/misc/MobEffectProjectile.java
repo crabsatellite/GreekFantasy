@@ -1,8 +1,8 @@
 package greekfantasy.entity.misc;
 
-
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -41,7 +41,7 @@ public abstract class MobEffectProjectile extends Projectile {
             // impact may inflict damage
             float damage = getImpactDamage(livingEntity);
             if (damage > 0 && thrower instanceof LivingEntity) {
-                livingEntity.hurt(DamageSource.indirectMobAttack(this, (LivingEntity) thrower), damage);
+                livingEntity.hurt(damageSources().mobProjectile(this, (LivingEntity) thrower), damage);
             }
             // add particle effect
             addParticles(getImpactParticle(livingEntity), 6 + random.nextInt(6));
@@ -69,8 +69,8 @@ public abstract class MobEffectProjectile extends Projectile {
             return;
         }
         // check for impact
-        if (!this.level.isClientSide()) {
-            HitResult raytraceresult = ProjectileUtil.getHitResult(this, this::canHitEntity);
+        if (!this.level().isClientSide()) {
+            HitResult raytraceresult = ProjectileUtil.getHitResultOnMoveVector(this, this::canHitEntity);
             if (raytraceresult.getType() != HitResult.Type.MISS
                     && !net.minecraftforge.event.ForgeEventFactory.onProjectileImpact(this, raytraceresult)) {
                 this.onHit(raytraceresult);
@@ -96,14 +96,14 @@ public abstract class MobEffectProjectile extends Projectile {
     @Override
     public Entity changeDimension(ServerLevel serverWorld, ITeleporter iTeleporter) {
         Entity entity = getOwner();
-        if (entity != null && entity.level.dimension() != serverWorld.dimension()) {
+        if (entity != null && entity.level().dimension() != serverWorld.dimension()) {
             setOwner(null);
         }
         return super.changeDimension(serverWorld, iTeleporter);
     }
 
     @Override
-    public Packet<?> getAddEntityPacket() {
+    public Packet<ClientGamePacketListener> getAddEntityPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
     }
 
@@ -120,7 +120,7 @@ public abstract class MobEffectProjectile extends Projectile {
     abstract float getImpactDamage(final LivingEntity entity);
 
     protected void addParticles(final ParticleOptions type, final int count) {
-        if (this.level.isClientSide()) {
+        if (this.level().isClientSide()) {
             final double x = getX();
             final double y = getY() + 0.1D;
             final double z = getZ();
@@ -128,13 +128,13 @@ public abstract class MobEffectProjectile extends Projectile {
             final double width = getBbWidth() / 2;
             final double height = getBbHeight() / 2;
             for (int i = 0; i < count; i++) {
-                level.addParticle(type,
-                        x + (level.random.nextDouble() - 0.5D) * width,
+                level().addParticle(type,
+                        x + (level().random.nextDouble() - 0.5D) * width,
                         y + height,
-                        z + (level.random.nextDouble() - 0.5D) * width,
-                        (level.random.nextDouble() - 0.5D) * motion,
-                        (level.random.nextDouble() - 0.5D) * motion,
-                        (level.random.nextDouble() - 0.5D) * motion);
+                        z + (level().random.nextDouble() - 0.5D) * width,
+                        (level().random.nextDouble() - 0.5D) * motion,
+                        (level().random.nextDouble() - 0.5D) * motion,
+                        (level().random.nextDouble() - 0.5D) * motion);
             }
         }
     }

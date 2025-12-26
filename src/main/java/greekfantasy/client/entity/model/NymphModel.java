@@ -2,7 +2,8 @@ package greekfantasy.client.entity.model;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Vector3f;
+import org.joml.Vector3f;
+import com.mojang.math.Axis;
 import greekfantasy.GreekFantasy;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -75,7 +76,7 @@ public class NymphModel<T extends PathfinderMob> extends HumanoidModel<T> {
         // translate and rotate based on swim amount
         if (swimAmount > 0.0F) {
             poseStack.translate(0.0D, swimAmount * 1.375D, swimAmount * -0.4D);
-            poseStack.mulPose(Vector3f.XP.rotationDegrees(swimAmount * 90.0F));
+            poseStack.mulPose(Axis.XP.rotationDegrees(swimAmount * 90.0F));
         }
         // render model
         super.renderToBuffer(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);

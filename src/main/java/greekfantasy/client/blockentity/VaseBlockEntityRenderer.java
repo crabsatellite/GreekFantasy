@@ -1,8 +1,9 @@
 package greekfantasy.client.blockentity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Matrix4f;
-import com.mojang.math.Vector3f;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import com.mojang.math.Axis;
 import greekfantasy.GreekFantasy;
 import greekfantasy.block.VaseBlock;
 import greekfantasy.blockentity.VaseBlockEntity;
@@ -10,6 +11,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
@@ -43,11 +45,11 @@ public class VaseBlockEntityRenderer implements BlockEntityRenderer<VaseBlockEnt
             poseStack.pushPose();
             // transforms
             poseStack.translate(0.5D, 0.70D, 0.5D);
-            poseStack.mulPose(Vector3f.YN.rotationDegrees(rotation));
+            poseStack.mulPose(Axis.YN.rotationDegrees(rotation));
             poseStack.scale(scale, scale, scale);
             // render the item stack
-            Minecraft.getInstance().getItemRenderer().renderStatic(itemstack, ItemTransforms.TransformType.FIXED, packedLight,
-                    OverlayTexture.NO_OVERLAY, poseStack, bufferSource, 0);
+            Minecraft.getInstance().getItemRenderer().renderStatic(itemstack, ItemDisplayContext.FIXED, packedLight,
+                    OverlayTexture.NO_OVERLAY, poseStack, bufferSource, vaseBlockEntity.getLevel(), 0);
             // finish rendering
             poseStack.popPose();
             // render nameplate
@@ -65,7 +67,7 @@ public class VaseBlockEntityRenderer implements BlockEntityRenderer<VaseBlockEnt
         if(renderManager.distanceToSqr(pos.x, pos.y, pos.z) < (distance * distance)
                 && mc.hitResult != null
                 && mc.hitResult.getType() == HitResult.Type.BLOCK) {
-            BlockPos blockPos = new BlockPos(mc.hitResult.getLocation());
+            BlockPos blockPos = BlockPos.containing(mc.hitResult.getLocation());
             BlockState blockState = blockEntity.getLevel().getBlockState(blockPos);
             return blockPos.equals(blockEntity.getBlockPos()) && blockState.is(blockEntity.getBlockState().getBlock());
         }
@@ -86,8 +88,8 @@ public class VaseBlockEntityRenderer implements BlockEntityRenderer<VaseBlockEnt
         int j = (int)(f1 * 255.0F) << 24;
         Font font = context.getFont();
         float f2 = (float)(-font.width(name) / 2);
-        font.drawInBatch(name, f2, 0.0F, 553648127, false, matrix4f, multiBufferSource, true, j, packedLight);
-        font.drawInBatch(name, f2, 0.0F, -1, false, matrix4f, multiBufferSource, false, 0, packedLight);
+        font.drawInBatch(name, f2, 0.0F, 553648127, false, matrix4f, multiBufferSource, Font.DisplayMode.NORMAL, j, packedLight);
+        font.drawInBatch(name, f2, 0.0F, -1, false, matrix4f, multiBufferSource, Font.DisplayMode.NORMAL, 0, packedLight);
 
         poseStack.popPose();
     }

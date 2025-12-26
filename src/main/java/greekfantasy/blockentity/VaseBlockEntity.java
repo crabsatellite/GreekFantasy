@@ -60,15 +60,15 @@ public class VaseBlockEntity extends BlockEntity implements Container, Nameable 
         inventoryChanged();
     }
 
-    //INVENTORY //
+    // INVENTORY //
 
     public NonNullList<ItemStack> getInventory() {
         return this.inventory;
     }
 
     public void dropAllItems() {
-        if (this.level != null && !this.level.isClientSide()) {
-            Containers.dropContents(this.level, this.getBlockPos(), this.getInventory());
+        if (this.getLevel() != null && !this.getLevel().isClientSide()) {
+            Containers.dropContents(this.getLevel(), this.getBlockPos(), this.getInventory());
         }
         this.inventoryChanged();
     }
@@ -111,7 +111,8 @@ public class VaseBlockEntity extends BlockEntity implements Container, Nameable 
     }
 
     /**
-     * Removes up to a specified number of items from an inventory slot and returns them in a new stack.
+     * Removes up to a specified number of items from an inventory slot and returns
+     * them in a new stack.
      */
     @Override
     public ItemStack removeItem(int index, int count) {
@@ -129,7 +130,8 @@ public class VaseBlockEntity extends BlockEntity implements Container, Nameable 
     }
 
     /**
-     * Sets the given item stack to the specified slot in the inventory (can be crafting or armor sections).
+     * Sets the given item stack to the specified slot in the inventory (can be
+     * crafting or armor sections).
      */
     @Override
     public void setItem(int index, ItemStack stack) {
@@ -141,10 +143,11 @@ public class VaseBlockEntity extends BlockEntity implements Container, Nameable 
 
     @Override
     public boolean stillValid(Player player) {
-        if (this.level.getBlockEntity(this.worldPosition) != this) {
+        if (this.getLevel().getBlockEntity(this.worldPosition) != this) {
             return false;
         } else {
-            return !(player.distanceToSqr((double) this.worldPosition.getX() + 0.5D, (double) this.worldPosition.getY() + 0.5D,
+            return !(player.distanceToSqr((double) this.worldPosition.getX() + 0.5D,
+                    (double) this.worldPosition.getY() + 0.5D,
                     (double) this.worldPosition.getZ() + 0.5D) > 64.0D);
         }
     }

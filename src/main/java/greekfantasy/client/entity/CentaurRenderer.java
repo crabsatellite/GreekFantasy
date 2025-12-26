@@ -22,7 +22,7 @@ public class CentaurRenderer<T extends Centaur> extends HumanoidMobRenderer<T, C
         BODY_TEXTURE_MAP.put(Variant.BROWN, new ResourceLocation(GreekFantasy.MODID, "textures/entity/centaur/brown.png"));
         BODY_TEXTURE_MAP.put(Variant.CHESTNUT, new ResourceLocation(GreekFantasy.MODID, "textures/entity/centaur/chestnut.png"));
         BODY_TEXTURE_MAP.put(Variant.CREAMY, new ResourceLocation(GreekFantasy.MODID, "textures/entity/centaur/creamy.png"));
-        BODY_TEXTURE_MAP.put(Variant.DARKBROWN, new ResourceLocation(GreekFantasy.MODID, "textures/entity/centaur/darkbrown.png"));
+        BODY_TEXTURE_MAP.put(Variant.DARK_BROWN, new ResourceLocation(GreekFantasy.MODID, "textures/entity/centaur/darkbrown.png"));
         BODY_TEXTURE_MAP.put(Variant.GRAY, new ResourceLocation(GreekFantasy.MODID, "textures/entity/centaur/gray.png"));
         BODY_TEXTURE_MAP.put(Variant.WHITE, new ResourceLocation(GreekFantasy.MODID, "textures/entity/centaur/white.png"));
     }

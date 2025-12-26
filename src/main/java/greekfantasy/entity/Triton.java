@@ -70,7 +70,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.ServerLevelAccessor;
-import net.minecraft.world.level.material.Material;
+// Material removed in 1.20.1
 import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -157,10 +157,10 @@ public class Triton extends PathfinderMob implements RangedAttackMob, NeutralMob
         super.tick();
         boolean inWater = this.isInWaterRainOrBubble();
         // random motion when not in water
-        if (!inWater && this.onGround) {
+        if (!inWater && this.onGround()) {
             this.setDeltaMovement(this.getDeltaMovement().add((this.random.nextFloat() * 2.0F - 1.0F) * 0.2F, 0.5D, (this.random.nextFloat() * 2.0F - 1.0F) * 0.2F));
             this.setYRot(this.random.nextFloat() * 360.0F);
-            this.onGround = false;
+            this.setOnGround(false);
             this.hasImpulse = true;
         }
         // update pose
@@ -214,14 +214,14 @@ public class Triton extends PathfinderMob implements RangedAttackMob, NeutralMob
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
         for (int i = 0; i < 10; ++i) {
             pos.setWithOffset(blockpos,
-                    level.random.nextInt(16) - 8,
-                    level.random.nextInt(8) - 4,
-                    level.random.nextInt(16) - 8);
-            if (level.getBlockState(pos).getMaterial() == Material.WATER) {
-                Guardian guardian = EntityType.GUARDIAN.create(level, null, null, null, pos, MobSpawnType.MOB_SUMMONED, false, false);
+                    level().random.nextInt(16) - 8,
+                    level().random.nextInt(8) - 4,
+                    level().random.nextInt(16) - 8);
+            if (level().getFluidState(pos).is(net.minecraft.tags.FluidTags.WATER)) {
+                Guardian guardian = EntityType.GUARDIAN.create(level, null, null, pos, MobSpawnType.MOB_SUMMONED, false, false);
                 if (guardian != null) {
                     if (guardian.checkSpawnRules(level, MobSpawnType.MOB_SUMMONED) && guardian.checkSpawnObstruction(level)) {
-                        level.addFreshEntityWithPassengers(guardian);
+                        level().addFreshEntity(guardian);
                         guardian.setPersistenceRequired();
                         guardian.getCapability(GreekFantasy.FRIENDLY_GUARDIAN_CAP).ifPresent(c -> c.setEnabled(true));
                         return Optional.of(guardian);
@@ -299,7 +299,7 @@ public class Triton extends PathfinderMob implements RangedAttackMob, NeutralMob
     @Override
     public void trade(PathfinderMob self, @Nullable final Player player, final ItemStack tradeItem) {
         TradingMob.super.trade(self, player, tradeItem);
-        this.level.broadcastEntityEvent(this, FINISH_TRADE_EVENT);
+        this.level().broadcastEntityEvent(this, FINISH_TRADE_EVENT);
     }
 
     @Override
@@ -323,7 +323,7 @@ public class Triton extends PathfinderMob implements RangedAttackMob, NeutralMob
                 // swing arm and play sound
                 this.swing(InteractionHand.MAIN_HAND, true);
                 for (int i = 0; i < 4; i++) {
-                    this.level.addParticle(ParticleTypes.HAPPY_VILLAGER, this.getX() + 0.5D * (random.nextDouble() - 0.5D), this.getEyeY() + 0.5D * (random.nextDouble() - 0.5D), this.getZ() + 0.5D * (random.nextDouble() - 0.5D), 0, 0, 0);
+                    this.level().addParticle(ParticleTypes.HAPPY_VILLAGER, this.getX() + 0.5D * (random.nextDouble() - 0.5D), this.getEyeY() + 0.5D * (random.nextDouble() - 0.5D), this.getZ() + 0.5D * (random.nextDouble() - 0.5D), 0, 0, 0);
                 }
                 break;
             default:
@@ -338,17 +338,17 @@ public class Triton extends PathfinderMob implements RangedAttackMob, NeutralMob
     public boolean hurt(final DamageSource source, final float amount) {
         // attempt to summon friendly guardian when hurt
         if (super.hurt(source, amount) && source.getEntity() instanceof Enemy) {
-            if (this.level instanceof ServerLevel serverLevel) {
+            if (this.level() instanceof ServerLevel serverLevel) {
                 // determine if there are enough nearby tritons
                 final AABB aabb = this.getBoundingBox().inflate(12.0D);
-                final long gameTime = level.getGameTime();
-                List<Triton> nearbyTriton = level.getEntitiesOfClass(Triton.class, aabb);
+                final long gameTime = level().getGameTime();
+                List<Triton> nearbyTriton = level().getEntitiesOfClass(Triton.class, aabb);
                 List<Triton> wantsToSpawnGuardian = nearbyTriton.stream()
                         .filter(m -> m.wantsToSpawnGuardian(gameTime))
                         .limit(4L).toList();
                 if (wantsToSpawnGuardian.size() >= 2) {
                     // determine if there are any guardians in range
-                    List<Guardian> guardians = level.getEntitiesOfClass(Guardian.class, aabb, p -> p.getCapability(GreekFantasy.FRIENDLY_GUARDIAN_CAP).orElse(FriendlyGuardian.EMPTY).isEnabled());
+                    List<Guardian> guardians = level().getEntitiesOfClass(Guardian.class, aabb, p -> p.getCapability(GreekFantasy.FRIENDLY_GUARDIAN_CAP).orElse(FriendlyGuardian.EMPTY).isEnabled());
                     if (guardians.isEmpty()) {
                         // attempt to spawn guardian
                         Optional<Guardian> oGuardian = trySpawnGuardian(serverLevel);
@@ -376,7 +376,7 @@ public class Triton extends PathfinderMob implements RangedAttackMob, NeutralMob
         super.readAdditionalSaveData(compound);
         this.setSlim(compound.getBoolean(KEY_SLIM));
         this.guardianTimestamp = compound.getLong(KEY_TIMESTAMP);
-        this.readPersistentAngerSaveData(this.level, compound);
+        this.readPersistentAngerSaveData(this.level(), compound);
     }
 
     @Override
@@ -459,21 +459,21 @@ public class Triton extends PathfinderMob implements RangedAttackMob, NeutralMob
 
     @Override
     public void updateSwimming() {
-        if (!this.level.isClientSide) {
+        if (!this.level().isClientSide) {
             this.setSwimming(true);
         }
     }
 
     @Override
     public void performRangedAttack(LivingEntity target, float distanceFactor) {
-        ThrownTrident throwntrident = new ThrownTrident(this.level, this, new ItemStack(Items.TRIDENT));
+        ThrownTrident throwntrident = new ThrownTrident(this.level(), this, new ItemStack(Items.TRIDENT));
         double d0 = target.getX() - this.getX();
         double d1 = target.getY(0.33D) - throwntrident.getY();
         double d2 = target.getZ() - this.getZ();
         double d3 = Math.sqrt(d0 * d0 + d2 * d2);
-        throwntrident.shoot(d0, d1 + d3 * (double) 0.2F, d2, 1.6F, (float) (14 - this.level.getDifficulty().getId() * 4));
+        throwntrident.shoot(d0, d1 + d3 * (double) 0.2F, d2, 1.6F, (float) (14 - this.level().getDifficulty().getId() * 4));
         this.playSound(SoundEvents.TRIDENT_THROW, 1.0F, 1.0F / (this.getRandom().nextFloat() * 0.4F + 0.8F));
-        this.level.addFreshEntity(throwntrident);
+        this.level().addFreshEntity(throwntrident);
     }
 
     static class TritonMoveControl extends WaterAnimalMoveControl {
@@ -533,7 +533,7 @@ public class Triton extends PathfinderMob implements RangedAttackMob, NeutralMob
                 return false;
             }
             // locate nearest dolphin
-            dolphin = entity.level.getNearestEntity(Dolphin.class, TargetingConditions.forNonCombat()
+            dolphin = entity.level().getNearestEntity(Dolphin.class, TargetingConditions.forNonCombat()
                             .selector(e -> e.getAirSupply() > 200 && e.isInWaterOrBubble()),
                     entity, entity.getX(), entity.getY(), entity.getZ(), entity.getBoundingBox().inflate(10.0D));
             if (null == dolphin || dolphin.getTarget() != null) {
@@ -590,7 +590,7 @@ public class Triton extends PathfinderMob implements RangedAttackMob, NeutralMob
             if (duration >= maxDuration) {
                 if (disSq < 6.25D) {
                     dolphin.playSound(SoundEvents.DOLPHIN_EAT, 1.0F, 1.0F);
-                    ((ServerLevel) entity.level).sendParticles(ParticleTypes.HEART, dolphin.getX(), dolphin.getY(), dolphin.getZ(), 2, 0.5D, 0.5D, 0.5D, 0.0D);
+                    ((ServerLevel) entity.level()).sendParticles(ParticleTypes.HEART, dolphin.getX(), dolphin.getY(), dolphin.getZ(), 2, 0.5D, 0.5D, 0.5D, 0.0D);
                 }
                 stop();
             }

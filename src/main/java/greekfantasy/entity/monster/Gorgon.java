@@ -1,4 +1,5 @@
 package greekfantasy.entity.monster;
+import net.minecraft.core.registries.Registries;
 
 import greekfantasy.GFRegistry;
 import greekfantasy.GreekFantasy;
@@ -163,26 +164,26 @@ public class Gorgon extends Monster implements RangedAttackMob {
     }
 
     public void spawnStareParticles() {
-        if (level.isClientSide()) {
+        if (level().isClientSide()) {
             final double motion = 0.08D;
             final double radius = 1.2D;
             for (int i = 0; i < 5; i++) {
-                level.addParticle(ParticleTypes.END_ROD,
-                        this.getX() + (level.random.nextDouble() - 0.5D) * radius,
-                        this.getEyeY() + (level.random.nextDouble() - 0.5D) * radius * 0.75D,
-                        this.getZ() + (level.random.nextDouble() - 0.5D) * radius,
-                        (level.random.nextDouble() - 0.5D) * motion,
-                        (level.random.nextDouble() - 0.5D) * motion * 0.5D,
-                        (level.random.nextDouble() - 0.5D) * motion);
+                level().addParticle(ParticleTypes.END_ROD,
+                        this.getX() + (level().random.nextDouble() - 0.5D) * radius,
+                        this.getEyeY() + (level().random.nextDouble() - 0.5D) * radius * 0.75D,
+                        this.getZ() + (level().random.nextDouble() - 0.5D) * radius,
+                        (level().random.nextDouble() - 0.5D) * motion,
+                        (level().random.nextDouble() - 0.5D) * motion * 0.5D,
+                        (level().random.nextDouble() - 0.5D) * motion);
             }
             final double distance = this.getAttribute(Attributes.FOLLOW_RANGE).getValue();
             // get list of all nearby players who have been petrified
-            final List<Player> list = this.level.getEntitiesOfClass(Player.class,
+            final List<Player> list = this.level().getEntitiesOfClass(Player.class,
                     this.getBoundingBox().inflate(distance),
                     e -> e.getEffect(GFRegistry.MobEffectReg.PETRIFIED.get()) != null);
             // spawn gorgon particle for each player
             for (final Player p : list) {
-                level.addParticle(GFRegistry.ParticleReg.GORGON.get(), true, p.getX(), p.getY(), p.getZ(), 0D, 0D, 0D);
+                level().addParticle(GFRegistry.ParticleReg.GORGON.get(), true, p.getX(), p.getY(), p.getZ(), 0D, 0D, 0D);
             }
         }
     }
@@ -231,9 +232,9 @@ public class Gorgon extends Monster implements RangedAttackMob {
         double dy = target.getY(0.67D) - arrow.getY();
         double dz = target.getZ() - arrow.getZ();
         double dis = Math.sqrt(dx * dx + dz * dz);
-        arrow.shoot(dx, dy + dis * (double) 0.2F, dz, 1.6F, (float) (14 - this.level.getDifficulty().getId() * 4));
+        arrow.shoot(dx, dy + dis * (double) 0.2F, dz, 1.6F, (float) (14 - this.level().getDifficulty().getId() * 4));
         this.playSound(SoundEvents.ARROW_SHOOT, 1.0F, 1.0F / (this.getRandom().nextFloat() * 0.4F + 0.8F));
-        this.level.addFreshEntity(arrow);
+        this.level().addFreshEntity(arrow);
     }
 
     // Stare Attack //
@@ -295,7 +296,7 @@ public class Gorgon extends Monster implements RangedAttackMob {
         }
         // update client-state
         if (this.isEffectiveAi()) {
-            this.level.broadcastEntityEvent(this, STARE_ATTACK);
+            this.level().broadcastEntityEvent(this, STARE_ATTACK);
         }
     }
 
@@ -416,7 +417,7 @@ public class Gorgon extends Monster implements RangedAttackMob {
                 cooldown--;
             } else {
                 double range = Gorgon.this.getAttribute(Attributes.FOLLOW_RANGE).getValue();
-                this.trackedPlayers = Gorgon.this.level.getEntitiesOfClass(Player.class, Gorgon.this.getBoundingBox().inflate(range),
+                this.trackedPlayers = Gorgon.this.level().getEntitiesOfClass(Player.class, Gorgon.this.getBoundingBox().inflate(range),
                         e -> Gorgon.this.canAttack(e) && !Gorgon.this.isImmuneToStareAttack(e) && Gorgon.this.isPlayerStaring(e));
                 return !this.trackedPlayers.isEmpty();
             }

@@ -1,4 +1,5 @@
 package greekfantasy.item;
+import net.minecraft.world.level.material.Fluids;
 
 import greekfantasy.GFRegistry;
 import greekfantasy.block.GoldenStringBlock;
@@ -39,7 +40,7 @@ public class GoldenBallItem extends Item {
             boolean isString = current.is(GFRegistry.BlockReg.GOLDEN_STRING.get());
             if(isString && current.getValue(GoldenStringBlock.AGE) > 0) {
                 level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
-            } else if(!isString && current.getMaterial().isReplaceable() && string.canSurvive(level, pos)) {
+            } else if(!isString && current.canBeReplaced(Fluids.EMPTY) && string.canSurvive(level, pos)) {
                 // place golden string
                 level.setBlock(pos, string, Block.UPDATE_ALL);
                 // damage item
@@ -50,6 +51,6 @@ public class GoldenBallItem extends Item {
 
     @Override
     public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
-        return slotChanged || !ItemStack.isSameIgnoreDurability(oldStack, newStack);
+        return slotChanged || !ItemStack.isSameItemSameTags(oldStack, newStack);
     }
 }

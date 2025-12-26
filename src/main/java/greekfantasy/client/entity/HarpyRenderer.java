@@ -1,7 +1,8 @@
 package greekfantasy.client.entity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Vector3f;
+import org.joml.Vector3f;
+import com.mojang.math.Axis;
 import greekfantasy.GreekFantasy;
 import greekfantasy.client.entity.model.HarpyModel;
 import greekfantasy.entity.monster.Harpy;
@@ -19,7 +20,7 @@ public class HarpyRenderer<T extends Harpy> extends HumanoidMobRenderer<T, Harpy
     @Override
     protected void scale(final T entity, PoseStack poseStack, float partialTick) {
         final float flyingTime = entity.getFlyingTime(partialTick);
-        poseStack.mulPose(Vector3f.XP.rotationDegrees(flyingTime * 10.0F));
+        poseStack.mulPose(Axis.XP.rotationDegrees(flyingTime * 10.0F));
     }
 
     @Override

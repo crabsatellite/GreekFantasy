@@ -12,6 +12,8 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.FluidTags;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -26,8 +28,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LightBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.Material;
+// Material removed in 1.20.1
 
 public class Palladium extends LivingEntity {
 
@@ -35,7 +38,7 @@ public class Palladium extends LivingEntity {
 
     public Palladium(final EntityType<? extends Palladium> entityType, final Level world) {
         super(entityType, world);
-        this.maxUpStep = 0.0F;
+        this.setMaxUpStep(0.0F);
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -97,16 +100,16 @@ public class Palladium extends LivingEntity {
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
-        if (!this.level.isClientSide && !this.isRemoved()) {
-            if (DamageSource.OUT_OF_WORLD.equals(source)) {
+        if (!this.level().isClientSide && !this.isRemoved()) {
+            if (source.is(DamageTypes.FELL_OUT_OF_WORLD)) {
                 this.kill();
                 return false;
             } else if (!this.isInvulnerableTo(source)) {
-                if (source.isExplosion()) {
+                if (source.is(DamageTypeTags.IS_EXPLOSION)) {
                     this.brokenByAnything(source);
                     this.kill();
                     return false;
-                } else if (DamageSource.IN_FIRE.equals(source)) {
+                } else if (source.is(DamageTypes.IN_FIRE)) {
                     if (this.isOnFire()) {
                         this.causeDamage(source, 0.15F);
                     } else {
@@ -114,7 +117,7 @@ public class Palladium extends LivingEntity {
                     }
 
                     return false;
-                } else if (DamageSource.ON_FIRE.equals(source) && this.getHealth() > 0.5F) {
+                } else if (source.is(DamageTypes.ON_FIRE) && this.getHealth() > 0.5F) {
                     this.causeDamage(source, 4.0F);
                     return false;
                 } else {
@@ -123,7 +126,8 @@ public class Palladium extends LivingEntity {
                     boolean flag2 = "player".equals(source.getMsgId());
                     if (!flag2 && !flag) {
                         return false;
-                    } else if (source.getEntity() instanceof Player && !((Player) source.getEntity()).getAbilities().mayBuild) {
+                    } else if (source.getEntity() instanceof Player
+                            && !((Player) source.getEntity()).getAbilities().mayBuild) {
                         return false;
                     } else if (source.isCreativePlayer()) {
                         this.playBrokenSound();
@@ -131,9 +135,9 @@ public class Palladium extends LivingEntity {
                         this.kill();
                         return flag1;
                     } else {
-                        long i = this.level.getGameTime();
+                        long i = this.level().getGameTime();
                         if (i - this.lastHit > 5L && !flag) {
-                            this.level.broadcastEntityEvent(this, (byte) 32);
+                            this.level().broadcastEntityEvent(this, (byte) 32);
                             this.lastHit = i;
                         } else {
                             this.brokenByPlayer(source);
@@ -172,29 +176,32 @@ public class Palladium extends LivingEntity {
         // parent tick
         super.aiStep();
         // server-side tick logic
-        if (!level.isClientSide && tickCount % 4 == 1) {
+        if (!level().isClientSide && tickCount % 4 == 1) {
             // attempt to place light block
             BlockPos posIn = getOnPos().above();
-            BlockState blockIn = level.getBlockState(posIn);
+            BlockState blockIn = level().getBlockState(posIn);
             // check if current block can be replaced
-            if ((blockIn.getMaterial() == Material.AIR || blockIn.getMaterial().isLiquid())
+            if ((blockIn.isAir() || blockIn.getFluidState().isEmpty() == false)
                     && !GFRegistry.BlockReg.LIGHT.get().defaultBlockState().is(blockIn.getBlock())) {
                 // determine waterlog value
                 boolean waterlogged = blockIn.getFluidState().isSource() && blockIn.getFluidState().is(FluidTags.WATER);
                 // create light block
                 BlockState lightBlock = GFRegistry.BlockReg.LIGHT.get()
                         .defaultBlockState()
-                        .setValue(PalladiumLightBlock.LEVEL, 11)
+                        .setValue(LightBlock.LEVEL, 11)
                         .setValue(PalladiumLightBlock.WATERLOGGED, waterlogged);
                 // place light block
-                level.setBlock(posIn, lightBlock, Block.UPDATE_ALL);
+                level().setBlock(posIn, lightBlock, Block.UPDATE_ALL);
             }
         }
     }
 
     private void showBreakingParticles() {
-        if (this.level instanceof ServerLevel) {
-            ((ServerLevel) this.level).sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, Blocks.STONE.defaultBlockState()), this.getX(), this.getY(0.66D), this.getZ(), 10, (double) (this.getBbWidth() / 4.0F), (double) (this.getBbHeight() / 4.0F), (double) (this.getBbWidth() / 4.0F), 0.05D);
+        if (this.level() instanceof ServerLevel) {
+            ((ServerLevel) this.level()).sendParticles(
+                    new BlockParticleOption(ParticleTypes.BLOCK, Blocks.STONE.defaultBlockState()), this.getX(),
+                    this.getY(0.66D), this.getZ(), 10, (double) (this.getBbWidth() / 4.0F),
+                    (double) (this.getBbHeight() / 4.0F), (double) (this.getBbWidth() / 4.0F), 0.05D);
         }
     }
 
@@ -212,7 +219,7 @@ public class Palladium extends LivingEntity {
     private void brokenByPlayer(DamageSource p_213815_1_) {
         // drop altar
         final ItemStack altarItem = new ItemStack(GFRegistry.ItemReg.PALLADIUM.get());
-        Block.popResource(level, blockPosition().above(), altarItem);
+        Block.popResource(level(), blockPosition().above(), altarItem);
         // drop other
         this.brokenByAnything(p_213815_1_);
     }
@@ -223,7 +230,8 @@ public class Palladium extends LivingEntity {
     }
 
     private void playBrokenSound() {
-        this.level.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.STONE_BREAK, this.getSoundSource(), 1.0F, 1.0F);
+        this.level().playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.STONE_BREAK,
+                this.getSoundSource(), 1.0F, 1.0F);
     }
 
     @Override

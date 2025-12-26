@@ -58,7 +58,7 @@ public abstract class FindBlockGoal extends Goal {
     @Override
     public void start() {
         this.cooldown = maxCooldown;
-        onFoundBlock(this.creature.level, this.targetPos);
+        onFoundBlock(this.creature.level(), this.targetPos);
     }
 
     /**
@@ -82,7 +82,7 @@ public abstract class FindBlockGoal extends Goal {
      * @return whether the entity is already at the target position
      **/
     protected boolean isOnBlock() {
-        return isTargetBlock(this.creature.level, this.creature.blockPosition());
+        return isTargetBlock(this.creature.level(), this.creature.blockPosition());
     }
 
     /**
@@ -108,7 +108,7 @@ public abstract class FindBlockGoal extends Goal {
                     rand.nextInt(searchRadiusXZ * 2) - searchRadiusXZ);
             // check the block to see if creature should move here
             if (this.isTargetBlock(this.creature.getCommandSenderWorld(), pos2)) {
-                return Optional.of(new BlockPos(pos2.getX(), pos2.getY(), pos2.getZ()));
+                return Optional.of(BlockPos.containing(pos2.getX(), pos2.getY(), pos2.getZ()));
             }
         }
         return Optional.empty();

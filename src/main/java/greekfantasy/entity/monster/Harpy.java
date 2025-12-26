@@ -110,7 +110,7 @@ public class Harpy extends Monster implements FlyingAnimal {
         super.aiStep();
         // update falling moveSpeed
         Vec3 m = getDeltaMovement();
-        if (this.isEffectiveAi() && !this.onGround && m.y < 0.0D) {
+        if (this.isEffectiveAi() && !this.onGround() && m.y < 0.0D) {
             final double multY = this.getTarget() != null ? 0.9D : 0.6D;
             setDeltaMovement(m.multiply(1.0D, multY, 1.0D));
         }
@@ -128,7 +128,7 @@ public class Harpy extends Monster implements FlyingAnimal {
             // check nest
             final Optional<BlockPos> nestPos = Harpy.this.getNestPos();
             // check if there is still a nest at the position
-            if (nestPos.isPresent() && !level.getBlockState(nestPos.get()).is(GFRegistry.BlockReg.NEST.get())) {
+            if (nestPos.isPresent() && !level().getBlockState(nestPos.get()).is(GFRegistry.BlockReg.NEST.get())) {
                 this.setNestPos(Optional.empty());
             }
         }
@@ -177,7 +177,7 @@ public class Harpy extends Monster implements FlyingAnimal {
             final int x = compound.getInt(KEY_NEST + ".x");
             final int y = compound.getInt(KEY_NEST + ".y");
             final int z = compound.getInt(KEY_NEST + ".z");
-            this.setNestPos(Optional.of(new BlockPos(x, y, z)));
+            this.setNestPos(Optional.of(BlockPos.containing(x, y, z)));
         }
     }
 
@@ -205,7 +205,7 @@ public class Harpy extends Monster implements FlyingAnimal {
 
     @Override
     public boolean isFlying() {
-        return !this.onGround || this.getDeltaMovement().lengthSqr() > 0.06D;
+        return !this.onGround() || this.getDeltaMovement().lengthSqr() > 0.06D;
     }
 
     public float getFlyingTime(final float partialTick) {
@@ -215,15 +215,15 @@ public class Harpy extends Monster implements FlyingAnimal {
     private void calculateFlapping() {
         this.oFlap = this.flap;
         this.oFlapSpeed = this.flapSpeed;
-        this.flapSpeed += (float) (!this.onGround && !this.isPassenger() ? 4 : -1) * 0.3F;
+        this.flapSpeed += (float) (!this.onGround() && !this.isPassenger() ? 4 : -1) * 0.3F;
         this.flapSpeed = Mth.clamp(this.flapSpeed, 0.0F, 1.0F);
-        if (!this.onGround && this.flapping < 1.0F) {
+        if (!this.onGround() && this.flapping < 1.0F) {
             this.flapping = 1.0F;
         }
 
         this.flapping *= 0.9F;
         Vec3 vec3 = this.getDeltaMovement();
-        if (!this.onGround && vec3.y < 0.0D) {
+        if (!this.onGround() && vec3.y < 0.0D) {
             this.setDeltaMovement(vec3.multiply(1.0D, 0.6D, 1.0D));
         }
 
@@ -261,7 +261,7 @@ public class Harpy extends Monster implements FlyingAnimal {
         @Override
         protected Optional<BlockPos> findNearbyBlock() {
             final Optional<BlockPos> nestPos = Harpy.this.getNestPos();
-            if (nestPos.isPresent() && isTargetBlock(Harpy.this.level, nestPos.get())) {
+            if (nestPos.isPresent() && isTargetBlock(Harpy.this.level(), nestPos.get())) {
                 return nestPos;
             }
             return super.findNearbyBlock();
@@ -269,7 +269,7 @@ public class Harpy extends Monster implements FlyingAnimal {
 
         @Override
         public boolean isTargetBlock(LevelReader level, BlockPos pos) {
-            return level.getBlockState(pos).is(GFRegistry.BlockReg.NEST.get());
+            return level().getBlockState(pos).is(GFRegistry.BlockReg.NEST.get());
         }
 
         @Override

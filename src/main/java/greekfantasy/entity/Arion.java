@@ -1,4 +1,5 @@
 package greekfantasy.entity;
+import net.minecraft.core.registries.Registries;
 
 import greekfantasy.GFRegistry;
 import greekfantasy.GreekFantasy;
@@ -30,8 +31,10 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 public class Arion extends Horse {
 
-    public static final TagKey<Item> FOOD = ForgeRegistries.ITEMS.tags().createTagKey(new ResourceLocation(GreekFantasy.MODID, "arion_food"));
-    public static final TagKey<Item> TRIGGER = ForgeRegistries.ITEMS.tags().createTagKey(new ResourceLocation(GreekFantasy.MODID, "arion_trigger"));
+    public static final TagKey<Item> FOOD = ForgeRegistries.ITEMS.tags()
+            .createTagKey(new ResourceLocation(GreekFantasy.MODID, "arion_food"));
+    public static final TagKey<Item> TRIGGER = ForgeRegistries.ITEMS.tags()
+            .createTagKey(new ResourceLocation(GreekFantasy.MODID, "arion_trigger"));
 
     public Arion(EntityType<? extends Arion> type, Level worldIn) {
         super(type, worldIn);
@@ -62,7 +65,8 @@ public class Arion extends Horse {
         entity.setPortalCooldown();
         entity.setAge(horse.getAge());
         level.addFreshEntity(entity);
-        entity.finalizeSpawn(level, level.getCurrentDifficultyAt(horse.blockPosition()), MobSpawnType.CONVERSION, null, null);
+        entity.finalizeSpawn(level, level.getCurrentDifficultyAt(horse.blockPosition()), MobSpawnType.CONVERSION, null,
+                null);
         // copy inventory and remove the old horse
         entity.copyInventory(horse);
         horse.inventory.clearContent();
@@ -72,12 +76,13 @@ public class Arion extends Horse {
         entity.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 60));
         entity.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 60));
         // play sound
-        level.playLocalSound(entity.getX(), entity.getY(), entity.getZ(), SoundEvents.PLAYER_LEVELUP, entity.getSoundSource(), 1.0F, 1.0F, false);
+        level.playLocalSound(entity.getX(), entity.getY(), entity.getZ(), SoundEvents.PLAYER_LEVELUP,
+                entity.getSoundSource(), 1.0F, 1.0F, false);
         return entity;
     }
 
     public void copyInventory(final Horse horse) {
-        for(int i = 0, n = horse.inventory.getContainerSize(); i < n; i++) {
+        for (int i = 0, n = horse.inventory.getContainerSize(); i < n; i++) {
             this.inventory.setItem(i, horse.inventory.getItem(i).copy());
         }
     }
@@ -107,22 +112,8 @@ public class Arion extends Horse {
         return 200;
     }
 
-    // CALLED FROM ON INITIAL SPAWN //
-
-    @Override
-    protected float generateRandomMaxHealth(RandomSource random) {
-        return super.generateRandomMaxHealth(random) + 30.0F;
-    }
-
-    @Override
-    protected double generateRandomJumpStrength(RandomSource random) {
-        return super.generateRandomJumpStrength(random) + 0.25F;
-    }
-
-    @Override
-    protected double generateRandomSpeed(RandomSource random) {
-        return super.generateRandomSpeed(random) + 0.21F;
-    }
+    // Horse stat methods are now static in 1.20.1, so we don't override them
+    // Stats are set via randomizeAttributes which is called during spawn
 
     // MISC //
 
@@ -151,7 +142,7 @@ public class Arion extends Horse {
         if (!this.isBaby()) {
             if (this.isTamed() && player.isSecondaryUseActive()) {
                 this.openCustomInventoryScreen(player);
-                return InteractionResult.sidedSuccess(this.level.isClientSide);
+                return InteractionResult.sidedSuccess(this.level().isClientSide);
             }
 
             if (this.isVehicle()) {
@@ -171,20 +162,20 @@ public class Arion extends Horse {
 
             if (!this.isTamed()) {
                 this.makeMad();
-                return InteractionResult.sidedSuccess(this.level.isClientSide);
+                return InteractionResult.sidedSuccess(this.level().isClientSide);
             }
 
             boolean flag = !this.isBaby() && !this.isSaddled() && itemstack.is(Items.SADDLE);
             if (this.isArmor(itemstack) || flag) {
                 this.openCustomInventoryScreen(player);
-                return InteractionResult.sidedSuccess(this.level.isClientSide);
+                return InteractionResult.sidedSuccess(this.level().isClientSide);
             }
         }
 
         // Only mount if already tame
         if (this.isTamed() && !this.isBaby()) {
             this.doPlayerRide(player);
-            return InteractionResult.sidedSuccess(this.level.isClientSide);
+            return InteractionResult.sidedSuccess(this.level().isClientSide);
         }
         // DO NOT CALL SUPER METHOD
         // return super.getEntityInteractionResult(player, hand);

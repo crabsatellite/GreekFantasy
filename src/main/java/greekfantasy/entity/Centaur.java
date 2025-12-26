@@ -136,8 +136,8 @@ public class Centaur extends PathfinderMob implements NeutralMob, RangedAttackMo
             this.moveTail();
         }
         // anger timer
-        if (!this.level.isClientSide()) {
-            this.updatePersistentAnger((ServerLevel) this.level, true);
+        if (!this.level().isClientSide()) {
+            this.updatePersistentAnger((ServerLevel) this.level(), true);
         }
     }
 
@@ -202,9 +202,9 @@ public class Centaur extends PathfinderMob implements NeutralMob, RangedAttackMo
         double dy = target.getY(0.67D) - arrow.getY();
         double dz = target.getZ() - arrow.getZ();
         double dis = Math.sqrt(dx * dx + dz * dz);
-        arrow.shoot(dx, dy + dis * (double) 0.2F, dz, 1.6F, (float) (14 - this.level.getDifficulty().getId() * 4));
+        arrow.shoot(dx, dy + dis * (double) 0.2F, dz, 1.6F, (float) (14 - this.level().getDifficulty().getId() * 4));
         this.playSound(SoundEvents.ARROW_SHOOT, 1.0F, 1.0F / (this.getRandom().nextFloat() * 0.4F + 0.8F));
-        this.level.addFreshEntity(arrow);
+        this.level().addFreshEntity(arrow);
     }
 
     // NBT Methods
@@ -220,7 +220,7 @@ public class Centaur extends PathfinderMob implements NeutralMob, RangedAttackMo
     public void readAdditionalSaveData(CompoundTag compound) {
         super.readAdditionalSaveData(compound);
         this.setVariant(Variant.byId(compound.getByte(KEY_VARIANT)));
-        this.readPersistentAngerSaveData(this.level, compound);
+        this.readPersistentAngerSaveData(this.level(), compound);
     }
 
     // NeutralMob methods
@@ -342,7 +342,7 @@ public class Centaur extends PathfinderMob implements NeutralMob, RangedAttackMo
 
     public void setRearing(final boolean rearing) {
         this.isRearing = rearing;
-        this.level.broadcastEntityEvent(this, rearing ? START_REARING_EVENT : STOP_REARING_EVENT);
+        this.level().broadcastEntityEvent(this, rearing ? START_REARING_EVENT : STOP_REARING_EVENT);
     }
 
     @Override
@@ -398,7 +398,7 @@ public class Centaur extends PathfinderMob implements NeutralMob, RangedAttackMo
     @Override
     public void trade(PathfinderMob self, @Nullable final Player player, final ItemStack tradeItem) {
         TradingMob.super.trade(self, player, tradeItem);
-        this.level.broadcastEntityEvent(this, FINISH_TRADE_EVENT);
+        this.level().broadcastEntityEvent(this, FINISH_TRADE_EVENT);
     }
 
     @Override

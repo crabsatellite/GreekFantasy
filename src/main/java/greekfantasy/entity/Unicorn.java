@@ -1,5 +1,8 @@
 package greekfantasy.entity;
 
+import net.minecraft.tags.DamageTypeTags;
+import java.util.function.DoubleSupplier;
+import java.util.function.IntUnaryOperator;
 import greekfantasy.GFRegistry;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
@@ -55,24 +58,21 @@ public class Unicorn extends AbstractHorse {
 
     @Override
     protected void randomizeAttributes(RandomSource random) {
-        this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(this.generateRandomMaxHealth(random));
-        this.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(this.generateRandomSpeed(random));
-        this.getAttribute(Attributes.JUMP_STRENGTH).setBaseValue(this.generateRandomJumpStrength(random));
+        this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(this.generateUnicornMaxHealth(random::nextInt));
+        this.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(this.generateUnicornSpeed(random::nextDouble));
+        this.getAttribute(Attributes.JUMP_STRENGTH).setBaseValue(this.generateUnicornJumpStrength(random::nextDouble));
     }
 
-    @Override
-    protected float generateRandomMaxHealth(RandomSource random) {
-        return super.generateRandomMaxHealth(random) + 28.0F;
+    protected float generateUnicornMaxHealth(IntUnaryOperator random) {
+        return AbstractHorse.generateMaxHealth(random) + 28.0F;
     }
 
-    @Override
-    protected double generateRandomJumpStrength(RandomSource random) {
-        return super.generateRandomJumpStrength(random) + 0.22F;
+    protected double generateUnicornJumpStrength(DoubleSupplier random) {
+        return AbstractHorse.generateJumpStrength(random) + 0.22F;
     }
 
-    @Override
-    protected double generateRandomSpeed(RandomSource random) {
-        return super.generateRandomSpeed(random) + 0.16F;
+    protected double generateUnicornSpeed(DoubleSupplier random) {
+        return AbstractHorse.generateSpeed(random) + 0.16F;
     }
 
     // MISC //
@@ -82,13 +82,13 @@ public class Unicorn extends AbstractHorse {
     public void tick() {
         super.tick();
 
-        if(level.isClientSide() && random.nextFloat() < 0.25F) {
+        if(level().isClientSide() && random.nextFloat() < 0.25F) {
             // spawn particles
             float radius = getBbWidth();
-            level.addParticle(ParticleTypes.INSTANT_EFFECT,
-                    this.getX() + (level.random.nextDouble() - 0.5D) * radius,
-                    this.getY() + (level.random.nextDouble() - 0.5D) * radius * 0.75D,
-                    this.getZ() + (level.random.nextDouble() - 0.5D) * radius,
+            level().addParticle(ParticleTypes.INSTANT_EFFECT,
+                    this.getX() + (level().random.nextDouble() - 0.5D) * radius,
+                    this.getY() + (level().random.nextDouble() - 0.5D) * radius * 0.75D,
+                    this.getZ() + (level().random.nextDouble() - 0.5D) * radius,
                     0, 0, 0);
         }
     }
@@ -106,7 +106,7 @@ public class Unicorn extends AbstractHorse {
 
     @Override
     protected void actuallyHurt(final DamageSource source, final float amountIn) {
-        super.actuallyHurt(source, source.isBypassMagic() || source.isBypassArmor() ? amountIn : amountIn * 0.5F);
+        super.actuallyHurt(source, source.is(DamageTypeTags.BYPASSES_EFFECTS) || source.is(DamageTypeTags.BYPASSES_ARMOR) ? amountIn : amountIn * 0.5F);
     }
 
     @Override
@@ -134,7 +134,7 @@ public class Unicorn extends AbstractHorse {
 
         ItemStack stack = this.inventory.getItem(1);
         if (isArmor(stack))
-            stack.onHorseArmorTick(level, this);
+            stack.onHorseArmorTick(level(), this);
     }
 
     @Override
@@ -172,7 +172,7 @@ public class Unicorn extends AbstractHorse {
         if (!this.isBaby()) {
             if (this.isTamed() && player.isSecondaryUseActive()) {
                 this.openCustomInventoryScreen(player);
-                return InteractionResult.sidedSuccess(this.level.isClientSide());
+                return InteractionResult.sidedSuccess(this.level().isClientSide());
             }
 
             if (this.isVehicle()) {
@@ -181,7 +181,7 @@ public class Unicorn extends AbstractHorse {
 
             if ((itemstack.isEmpty() && this.isTamed()) || itemstack.is(GFRegistry.ItemReg.GOLDEN_BRIDLE.get())) {
                 this.doPlayerRide(player);
-                return InteractionResult.sidedSuccess(this.level.isClientSide());
+                return InteractionResult.sidedSuccess(this.level().isClientSide());
             }
         }
 
@@ -197,13 +197,13 @@ public class Unicorn extends AbstractHorse {
 
             if (!this.isTamed()) {
                 this.makeMad();
-                return InteractionResult.sidedSuccess(this.level.isClientSide());
+                return InteractionResult.sidedSuccess(this.level().isClientSide());
             }
 
             boolean isUsableSaddle = !this.isBaby() && !this.isSaddled() && itemstack.is(Items.SADDLE);
             if (this.isArmor(itemstack) || isUsableSaddle) {
                 this.openCustomInventoryScreen(player);
-                return InteractionResult.sidedSuccess(this.level.isClientSide());
+                return InteractionResult.sidedSuccess(this.level().isClientSide());
             }
         }
 

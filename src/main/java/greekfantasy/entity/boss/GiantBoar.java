@@ -1,4 +1,5 @@
 package greekfantasy.entity.boss;
+import net.minecraft.core.registries.Registries;
 
 import greekfantasy.GFRegistry;
 import greekfantasy.GreekFantasy;
@@ -17,6 +18,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -122,7 +124,7 @@ public class GiantBoar extends Hoglin {
             this.setTarget(null);
             // spawn particles
             final double width = this.getBbWidth();
-            level.addParticle(ParticleTypes.ENTITY_EFFECT,
+            level().addParticle(ParticleTypes.ENTITY_EFFECT,
                     this.getX() + (random.nextDouble() - 0.5D) * width,
                     this.getY() + random.nextDouble(),
                     this.getZ() + (random.nextDouble() - 0.5D) * width, 0.01D, 0.01D, 0.01D);
@@ -162,7 +164,7 @@ public class GiantBoar extends Hoglin {
 
     @Override
     public boolean isInvulnerableTo(final DamageSource source) {
-        return isSpawning() || source == DamageSource.IN_WALL || source == DamageSource.WITHER || super.isInvulnerableTo(source);
+        return isSpawning() || source.is(DamageTypes.IN_WALL) || source.is(DamageTypes.WITHER) || super.isInvulnerableTo(source);
     }
 
     @Override
@@ -275,8 +277,8 @@ public class GiantBoar extends Hoglin {
         if (spawning) {
             spawnTime = 1;
             // notify client
-            if (!level.isClientSide()) {
-                level.broadcastEntityEvent(this, SPAWN_CLIENT);
+            if (!level().isClientSide()) {
+                this.level().broadcastEntityEvent(this, SPAWN_CLIENT);
             }
         } else {
             spawnTime = 0;

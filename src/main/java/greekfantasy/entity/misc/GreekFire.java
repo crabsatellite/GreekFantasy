@@ -4,10 +4,10 @@ import greekfantasy.GFRegistry;
 import greekfantasy.block.OliveOilBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -60,7 +60,7 @@ public class GreekFire extends ThrowableItemProjectile {
     @Override
     protected void onHit(HitResult raytrace) {
         super.onHit(raytrace);
-        if (!this.level.isClientSide() && level instanceof ServerLevel && this.isAlive()) {
+        if (!this.level().isClientSide() && this.level() instanceof ServerLevel && this.isAlive()) {
             causeExplosion(raytrace.getLocation());
             discard();
         }
@@ -70,28 +70,32 @@ public class GreekFire extends ThrowableItemProjectile {
         // cause explosion at this location
         final float size = 1.25F;
         final float size2 = size * 1.5F;
-        Explosion exp = this.level.explode(this.getOwner(), DamageSource.ON_FIRE, null, vec.x, vec.y, vec.z, size, false, Explosion.BlockInteraction.NONE);
-        final BlockState oilBlock = GFRegistry.BlockReg.OLIVE_OIL.get().defaultBlockState().setValue(OliveOilBlock.LIT, true);
+        Explosion exp = this.level().explode(this.getOwner(), this.damageSources().onFire(), null, vec.x, vec.y, vec.z,
+                size, false, Level.ExplosionInteraction.NONE);
+        final BlockState oilBlock = GFRegistry.BlockReg.OLIVE_OIL.get().defaultBlockState().setValue(OliveOilBlock.LIT,
+                true);
         final BlockState waterloggedOilBlock = oilBlock.setValue(OliveOilBlock.WATERLOGGED, true);
         // place oil fire around the area
-        BlockPos origin = new BlockPos(vec.x, vec.y, vec.z);
+        BlockPos origin = BlockPos.containing(vec.x, vec.y, vec.z);
         BlockPos.MutableBlockPos pos = origin.mutable();
         BlockState state;
-        for(float x = -size2; x < size2; x++) {
-            for(float y = -size2; y < size2; y++) {
-                for(float z = -size2; z < size2; z++) {
+        for (float x = -size2; x < size2; x++) {
+            for (float y = -size2; y < size2; y++) {
+                for (float z = -size2; z < size2; z++) {
                     // update position
                     pos.setWithOffset(origin, Mth.floor(x), Mth.floor(y), Mth.floor(z));
                     // determine if block should be destroyed
-                    if (level.random.nextInt(3) > 0) {
-                        state = level.getBlockState(pos);
-                        if ((state.getMaterial().isReplaceable() && level.getBlockState(pos.below()).isSolidRender(level, pos.below()))) {
+                    if (level().random.nextInt(3) > 0) {
+                        state = level().getBlockState(pos);
+                        if ((state.canBeReplaced()
+                                && level().getBlockState(pos.below()).isSolidRender(level(), pos.below()))) {
                             // attempt to place lit oil
-                            this.level.setBlockAndUpdate(pos, oilBlock);
-                        } else if (level.getBlockState(pos).getFluidState().is(FluidTags.WATER) && level.isEmptyBlock(pos.above())) {
+                            this.level().setBlockAndUpdate(pos, oilBlock);
+                        } else if (level().getBlockState(pos).getFluidState().is(FluidTags.WATER)
+                                && level().isEmptyBlock(pos.above())) {
                             // attempt to place waterlogged lit oil and soul fire
-                            this.level.setBlockAndUpdate(pos, waterloggedOilBlock);
-                            this.level.setBlock(pos.above(), Blocks.SOUL_FIRE.defaultBlockState(), 2);
+                            this.level().setBlockAndUpdate(pos, waterloggedOilBlock);
+                            this.level().setBlock(pos.above(), Blocks.SOUL_FIRE.defaultBlockState(), 2);
                         }
                     }
                 }
@@ -104,7 +108,7 @@ public class GreekFire extends ThrowableItemProjectile {
     @Override
     public void tick() {
         // attempt to raytrace with fluids
-        HitResult raytraceresult = level.clip(new ClipContext(
+        HitResult raytraceresult = level().clip(new ClipContext(
                 this.position().add(-0.1D, -0.1D, -0.1D), this.position().add(0.1D, 0.1D, 0.1D),
                 ClipContext.Block.OUTLINE, ClipContext.Fluid.ANY, this));
         if (raytraceresult.getType() == HitResult.Type.BLOCK) {
@@ -125,14 +129,14 @@ public class GreekFire extends ThrowableItemProjectile {
     @Override
     public Entity changeDimension(ServerLevel serverWorld, ITeleporter iTeleporter) {
         Entity entity = this.getOwner();
-        if (entity != null && entity.level.dimension() != serverWorld.dimension()) {
+        if (entity != null && entity.level().dimension() != serverWorld.dimension()) {
             setOwner(null);
         }
         return super.changeDimension(serverWorld, iTeleporter);
     }
 
     @Override
-    public Packet<?> getAddEntityPacket() {
+    public Packet<ClientGamePacketListener> getAddEntityPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
     }
 

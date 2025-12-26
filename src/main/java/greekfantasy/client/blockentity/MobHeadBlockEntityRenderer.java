@@ -2,7 +2,8 @@ package greekfantasy.client.blockentity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Vector3f;
+import org.joml.Vector3f;
+import com.mojang.math.Axis;
 import greekfantasy.block.MobHeadBlock;
 import greekfantasy.blockentity.MobHeadBlockEntity;
 import net.minecraft.client.model.Model;
@@ -34,8 +35,8 @@ public abstract class MobHeadBlockEntityRenderer implements BlockEntityRenderer<
 
         // apply wall rotations, if any
         poseStack.translate(0.5D, 1.0F, 0.5D);
-        poseStack.mulPose(Vector3f.XP.rotationDegrees(180.0F));
-        poseStack.mulPose(Vector3f.YP.rotationDegrees(rotation));
+        poseStack.mulPose(Axis.XP.rotationDegrees(180.0F));
+        poseStack.mulPose(Axis.YP.rotationDegrees(rotation));
         applyRotations(poseStack, blockEntity.onWall());
         poseStack.scale(scale, scale, scale);
         VertexConsumer vertexBuilder = bufferSource.getBuffer(RenderType.entityCutoutNoCull(texture));

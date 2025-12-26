@@ -1,6 +1,5 @@
 package greekfantasy.entity.monster;
 
-
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
@@ -29,8 +28,8 @@ public class MadCow extends Cow implements Enemy {
     public MadCow(final EntityType<? extends MadCow> type, final Level worldIn) {
         super(type, worldIn);
         // remove pathfinding malus to encourage dangerous movement
-        this.setPathfindingMalus(BlockPathTypes.DANGER_CACTUS, 0);
-        this.setPathfindingMalus(BlockPathTypes.DAMAGE_CACTUS, 0);
+        this.setPathfindingMalus(BlockPathTypes.DANGER_OTHER, 0);
+        this.setPathfindingMalus(BlockPathTypes.DAMAGE_OTHER, 0);
         this.setPathfindingMalus(BlockPathTypes.DANGER_FIRE, 0);
         this.setPathfindingMalus(BlockPathTypes.DAMAGE_FIRE, 0);
         this.setPathfindingMalus(BlockPathTypes.DANGER_OTHER, 0);
@@ -58,18 +57,13 @@ public class MadCow extends Cow implements Enemy {
         super.aiStep();
         // slowly lose health
         if (!this.isPersistenceRequired() && this.random.nextInt(400) == 0) {
-            this.hurt(DamageSource.STARVE, 1.0F);
+            this.hurt(this.damageSources().starve(), 1.0F);
         }
     }
 
     @Override
     public MobCategory getClassification(boolean forSpawnCount) {
         return MobCategory.MONSTER;
-    }
-
-    @Override
-    public boolean canCutCorner(BlockPathTypes pathType) {
-        return pathType != BlockPathTypes.WALKABLE_DOOR;
     }
 
     @Override

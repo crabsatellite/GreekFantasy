@@ -31,7 +31,7 @@ public class BidentItem extends SpearItem {
                 && level instanceof ServerLevel
                 && (!GreekFantasy.isRGLoaded() || RGCompat.getInstance().canUseRaising(thrower))) {
             // Attempt to spawn a Sparti where the player is looking
-            final HitResult raytrace = ThunderboltItem.raytraceFromEntity(thrower, (float) thrower.getAttribute(ForgeMod.REACH_DISTANCE.get()).getValue());
+            final HitResult raytrace = ThunderboltItem.raytraceFromEntity(thrower, (float) thrower.getAttribute(ForgeMod.BLOCK_REACH.get()).getValue());
             if (raytrace.getType() != HitResult.Type.MISS) {
                 stack.hurtAndBreak(25, thrower, e -> e.broadcastBreakEvent(thrower.getUsedItemHand()));
                 // spawn a sparti and set location
@@ -44,7 +44,7 @@ public class BidentItem extends SpearItem {
                 // entity data on spawn
                 sparti.tame(thrower);
                 sparti.setSpawning();
-                sparti.finalizeSpawn((ServerLevel) level, level.getCurrentDifficultyAt(new BlockPos(raytrace.getLocation())), MobSpawnType.MOB_SUMMONED, null, null);
+                sparti.finalizeSpawn((ServerLevel) level, level.getCurrentDifficultyAt(BlockPos.containing(raytrace.getLocation())), MobSpawnType.MOB_SUMMONED, null, null);
             }
         } else {
             // Default behavior when not enchanted

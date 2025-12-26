@@ -1,4 +1,5 @@
 package greekfantasy.entity;
+import net.minecraft.core.registries.Registries;
 
 import greekfantasy.GFRegistry;
 import greekfantasy.GreekFantasy;
@@ -139,7 +140,7 @@ public class Orthus extends TamableAnimal implements NeutralMob {
         // update lifespan
         if (this.limitedLifespan && --this.limitedLifeTicks <= 0) {
             this.limitedLifeTicks = 40;
-            hurt(DamageSource.STARVE, 1.0F);
+            hurt(this.damageSources().starve(), 1.0F);
         }
     }
 
@@ -156,7 +157,7 @@ public class Orthus extends TamableAnimal implements NeutralMob {
             }
 
             // spawn particles
-            if (level.isClientSide() && this.isFireAttack()) {
+            if (level().isClientSide() && this.isFireAttack()) {
                 spawnFireParticles();
             }
         }
@@ -282,11 +283,11 @@ public class Orthus extends TamableAnimal implements NeutralMob {
         if (compound.contains(KEY_LIFE_TICKS)) {
             setLimitedLife(compound.getInt(KEY_LIFE_TICKS));
         }
-        this.readPersistentAngerSaveData(this.level, compound);
+        this.readPersistentAngerSaveData(this.level(), compound);
     }
 
     public void spawnFireParticles() {
-        if (!level.isClientSide()) {
+        if (!level().isClientSide()) {
             return;
         }
         Vec3 lookVec = this.getLookAngle();
@@ -295,10 +296,10 @@ public class Orthus extends TamableAnimal implements NeutralMob {
         final double radius = 0.75D;
 
         for (int i = 0; i < 5; i++) {
-            level.addParticle(ParticleTypes.FLAME,
-                    pos.x + (level.random.nextDouble() - 0.5D) * radius,
-                    pos.y + (level.random.nextDouble() - 0.5D) * radius,
-                    pos.z + (level.random.nextDouble() - 0.5D) * radius,
+            level().addParticle(ParticleTypes.FLAME,
+                    pos.x + (level().random.nextDouble() - 0.5D) * radius,
+                    pos.y + (level().random.nextDouble() - 0.5D) * radius,
+                    pos.z + (level().random.nextDouble() - 0.5D) * radius,
                     lookVec.x * motion * FIRE_RANGE,
                     lookVec.y * motion * 0.5D,
                     lookVec.z * motion * FIRE_RANGE);
@@ -364,7 +365,7 @@ public class Orthus extends TamableAnimal implements NeutralMob {
     @Override
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         ItemStack heldItem = player.getItemInHand(hand);
-        if (this.level.isClientSide()) {
+        if (this.level().isClientSide()) {
             boolean flag = this.isOwnedBy(player) || this.isTame()
                     || heldItem.is(FOOD) && !this.isTame();
             return flag ? InteractionResult.CONSUME : InteractionResult.PASS;
@@ -412,9 +413,9 @@ public class Orthus extends TamableAnimal implements NeutralMob {
                     this.navigation.stop();
                     this.setTarget(null);
                     this.setOrderedToSit(true);
-                    this.level.broadcastEntityEvent(this, (byte) 7);
+                    this.level().broadcastEntityEvent(this, (byte) 7);
                 } else {
-                    this.level.broadcastEntityEvent(this, (byte) 6);
+                    this.level().broadcastEntityEvent(this, (byte) 6);
                 }
 
                 return InteractionResult.SUCCESS;
@@ -454,13 +455,13 @@ public class Orthus extends TamableAnimal implements NeutralMob {
     public void setFireAttack(final boolean shooting) {
         if(shooting) {
             this.fireTime = MAX_FIRE_TIME;
-            if(!level.isClientSide()) {
-                level.broadcastEntityEvent(this, CLIENT_START_FIRE_EVENT);
+            if(!level().isClientSide()) {
+                this.level().broadcastEntityEvent(this, CLIENT_START_FIRE_EVENT);
             }
         } else {
             this.fireTime = 0;
-            if(!level.isClientSide()) {
-                level.broadcastEntityEvent(this, CLIENT_STOP_FIRE_EVENT);
+            if(!level().isClientSide()) {
+                this.level().broadcastEntityEvent(this, CLIENT_STOP_FIRE_EVENT);
             }
         }
     }

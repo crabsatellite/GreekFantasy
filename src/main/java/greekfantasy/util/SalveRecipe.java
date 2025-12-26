@@ -13,6 +13,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.ShapelessRecipe;
@@ -30,7 +31,7 @@ public class SalveRecipe extends ShapelessRecipe {
     public SalveRecipe(ResourceLocation idIn, WeightedMobEffectInstance useEffect,
                        List<WeightedMobEffectInstance> bonusEffects, int rolls,
                        NonNullList<Ingredient> recipeItemsIn) {
-        super(idIn, Serializer.CATEGORY, createSalve(useEffect, bonusEffects, rolls), recipeItemsIn);
+        super(idIn, "", CraftingBookCategory.MISC, createSalve(useEffect, bonusEffects, rolls), recipeItemsIn);
         this.useEffect = useEffect;
         this.bonusEffects = bonusEffects;
         this.bonusEffectCount = this.bonusEffects.size();
@@ -55,8 +56,8 @@ public class SalveRecipe extends ShapelessRecipe {
     }
 
     @Override
-    public ItemStack assemble(CraftingContainer inv) {
-        final ItemStack result = super.assemble(inv);
+    public ItemStack assemble(CraftingContainer inv, net.minecraft.core.RegistryAccess registryAccess) {
+        final ItemStack result = super.assemble(inv, registryAccess);
         return result;
     }
 

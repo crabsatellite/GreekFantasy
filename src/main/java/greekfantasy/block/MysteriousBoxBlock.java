@@ -104,7 +104,7 @@ public class MysteriousBoxBlock extends HorizontalDirectionalBlock implements Si
             level.playSound(player, pos, SoundEvents.BARREL_OPEN, SoundSource.BLOCKS,
                     0.8F + level.getRandom().nextFloat() * 0.4F,
                     0.8F + level.getRandom().nextFloat() * 0.4F);
-            if(!player.level.isClientSide() && MysteriousBoxManager.onBoxOpened(level, player, state, pos)) {
+            if(!player.level().isClientSide() && MysteriousBoxManager.onBoxOpened(level, player, state, pos)) {
                 level.setBlock(pos, state.setValue(OPEN, true), Block.UPDATE_CLIENTS);
             }
             return InteractionResult.CONSUME;
@@ -127,7 +127,7 @@ public class MysteriousBoxBlock extends HorizontalDirectionalBlock implements Si
                 0.8F + level.getRandom().nextFloat() * 0.4F,
                 0.8F + level.getRandom().nextFloat() * 0.4F);
         // open the box and replace with opened variant of block
-        if(!player.level.isClientSide() && MysteriousBoxManager.onBoxOpened(level, player, state, pos)) {
+        if(!player.level().isClientSide() && MysteriousBoxManager.onBoxOpened(level, player, state, pos)) {
             level.setBlock(pos, state.setValue(OPEN, true), Block.UPDATE_CLIENTS);
         }
         return false;

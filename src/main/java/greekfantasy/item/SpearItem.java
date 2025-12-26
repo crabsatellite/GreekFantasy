@@ -1,4 +1,5 @@
 package greekfantasy.item;
+import net.minecraft.core.registries.Registries;
 
 import com.google.common.collect.ImmutableMultimap;
 import greekfantasy.entity.misc.Spear;
@@ -157,7 +158,7 @@ public class SpearItem extends TieredItem implements Vanishable {
             ImmutableMultimap.Builder<Attribute, AttributeModifier> mapBuilder = ImmutableMultimap.builder();
             mapBuilder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(BASE_ATTACK_DAMAGE_UUID, "Tool modifier", 5.0D + getTier().getAttackDamageBonus(), AttributeModifier.Operation.ADDITION));
             mapBuilder.put(Attributes.ATTACK_SPEED, new AttributeModifier(BASE_ATTACK_SPEED_UUID, "Tool modifier", -2.9D, AttributeModifier.Operation.ADDITION));
-            mapBuilder.put(ForgeMod.ATTACK_RANGE.get(), new AttributeModifier(BASE_ATTACK_RANGE_UUID, "Weapon modifier", attackRange, AttributeModifier.Operation.ADDITION));
+            mapBuilder.put(ForgeMod.ENTITY_REACH.get(), new AttributeModifier(BASE_ATTACK_RANGE_UUID, "Weapon modifier", attackRange, AttributeModifier.Operation.ADDITION));
             this.spearAttributes = mapBuilder.build();
         }
         return slot == EquipmentSlot.MAINHAND ? this.spearAttributes : super.getAttributeModifiers(slot, stack);
@@ -181,7 +182,7 @@ public class SpearItem extends TieredItem implements Vanishable {
             if(potion != null) {
                 int level = 1 + nbt.getInt("Amplifier");
                 tooltip.add(Component.translatable(potion.getDescriptionId()).append(" ")
-                        .append(Component.translatable("enchantment.level." + level))
+                        .append(Component.translatable("enchantment.level()." + level))
                         .withStyle(ChatFormatting.GREEN));
             }
         }

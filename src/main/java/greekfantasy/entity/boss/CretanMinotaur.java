@@ -70,11 +70,11 @@ public class CretanMinotaur extends Minotaur implements RangedAttackMob {
         super.aiStep();
         // boss info
         this.bossInfo.setProgress(this.getHealth() / this.getMaxHealth());
-        if(!this.level.isClientSide() && this.tickCount % 60 == 1) {
+        if(!this.level().isClientSide() && this.tickCount % 60 == 1) {
             // clear player list
             this.bossInfo.removeAllPlayers();
             // locate nearby players and add them to the boss event when in range
-            List<ServerPlayer> serverPlayers = level.getEntitiesOfClass(ServerPlayer.class, this.getBoundingBox().inflate(24.0D));
+            List<ServerPlayer> serverPlayers = level().getEntitiesOfClass(ServerPlayer.class, this.getBoundingBox().inflate(24.0D));
             for(ServerPlayer player : serverPlayers) {
                 if(player != null && this.getSensing().hasLineOfSight(player)) {
                     this.bossInfo.addPlayer(player);
@@ -140,16 +140,16 @@ public class CretanMinotaur extends Minotaur implements RangedAttackMob {
 
     @Override
     public void performRangedAttack(LivingEntity target, float distanceFactor) {
-        if (!level.isClientSide()) {
+        if (!level().isClientSide()) {
             ItemStack axe = this.getMainHandItem().copy();
-            ThrowingAxe throwingAxe = new ThrowingAxe(level, this, axe, false);
+            ThrowingAxe throwingAxe = new ThrowingAxe(level(), this, axe, false);
             throwingAxe.setBaseDamage(throwingAxe.getBaseDamage() + this.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.5D);
             double dx = target.getX() - throwingAxe.getX();
             double dy = target.getY(0.67D) - throwingAxe.getY();
             double dz = target.getZ() - throwingAxe.getZ();
             double dis = Math.sqrt(dx * dx + dz * dz);
-            throwingAxe.shoot(dx, dy + dis * (double) 0.08F, dz, 1.12F, (float) (8 - this.level.getDifficulty().getId()));
-            this.level.addFreshEntity(throwingAxe);
+            throwingAxe.shoot(dx, dy + dis * (double) 0.08F, dz, 1.12F, (float) (8 - this.level().getDifficulty().getId()));
+            this.level().addFreshEntity(throwingAxe);
         }
         this.swing(InteractionHand.MAIN_HAND);
         this.playSound(SoundEvents.TRIDENT_THROW, 1.2F, 1.2F + this.random.nextFloat() * 0.2F);

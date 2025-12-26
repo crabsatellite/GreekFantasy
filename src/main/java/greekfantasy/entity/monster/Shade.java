@@ -83,17 +83,17 @@ public class Shade extends Monster {
     public void tick() {
         super.tick();
         // spawn particles
-        if (level.isClientSide()) {
+        if (level().isClientSide()) {
             final double motion = 0.08D;
             final double radius = 1.2D;
             for (int i = 0; i < 5; i++) {
-                level.addParticle(ParticleTypes.SMOKE,
-                        this.getX() + (level.random.nextDouble() - 0.5D) * radius,
-                        this.getY() + 0.75D + (level.random.nextDouble() - 0.5D) * radius * 0.75D,
-                        this.getZ() + (level.random.nextDouble() - 0.5D) * radius,
-                        (level.random.nextDouble() - 0.5D) * motion,
-                        (level.random.nextDouble() - 0.5D) * motion * 0.5D,
-                        (level.random.nextDouble() - 0.5D) * motion);
+                level().addParticle(ParticleTypes.SMOKE,
+                        this.getX() + (level().random.nextDouble() - 0.5D) * radius,
+                        this.getY() + 0.75D + (level().random.nextDouble() - 0.5D) * radius * 0.75D,
+                        this.getZ() + (level().random.nextDouble() - 0.5D) * radius,
+                        (level().random.nextDouble() - 0.5D) * motion,
+                        (level().random.nextDouble() - 0.5D) * motion * 0.5D,
+                        (level().random.nextDouble() - 0.5D) * motion);
             }
         }
     }
@@ -133,7 +133,7 @@ public class Shade extends Monster {
 
     @Override
     protected SoundEvent getAmbientSound() {
-        return SoundEvents.AMBIENT_CAVE;
+        return SoundEvents.AMBIENT_CAVE.value();
     }
 
     @Override

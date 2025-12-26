@@ -1,5 +1,6 @@
 package greekfantasy.entity.monster;
 
+import net.minecraft.tags.DamageTypeTags;
 import greekfantasy.entity.misc.BronzeFeather;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvent;
@@ -96,7 +97,7 @@ public class Stymphalian extends Monster implements FlyingAnimal, RangedAttackMo
         super.aiStep();
         // update falling moveSpeed
         Vec3 m = getDeltaMovement();
-        if (this.isEffectiveAi() && !this.onGround && m.y() > 0) {
+        if (this.isEffectiveAi() && !this.onGround() && m.y() > 0) {
             setDeltaMovement(m.add(0.0D, -0.01D, 0.0D));
         }
     }
@@ -104,7 +105,7 @@ public class Stymphalian extends Monster implements FlyingAnimal, RangedAttackMo
     @Override
     public void tick() {
         super.tick();
-        if (this.level.isClientSide()) {
+        if (this.level().isClientSide()) {
             // update flying counter
             flyingTime0 = flyingTime;
             if (this.isFlying()) {
@@ -165,7 +166,7 @@ public class Stymphalian extends Monster implements FlyingAnimal, RangedAttackMo
 
     @Override
     public boolean isFlying() {
-        return !isOnGround() || this.getDeltaMovement().lengthSqr() > 0.06D;
+        return !onGround() || this.getDeltaMovement().lengthSqr() > 0.06D;
     }
 
     public float getFlyingTime(final float partialTick) {
@@ -176,21 +177,21 @@ public class Stymphalian extends Monster implements FlyingAnimal, RangedAttackMo
 
     @Override
     public void performRangedAttack(LivingEntity target, float distanceFactor) {
-        if (!level.isClientSide()) {
-            BronzeFeather bronzeFeather = BronzeFeather.create(level, this);
+        if (!level().isClientSide()) {
+            BronzeFeather bronzeFeather = BronzeFeather.create(level(), this);
             double dx = target.getX() - bronzeFeather.getX();
             double dy = target.getY(0.67D) - bronzeFeather.getY();
             double dz = target.getZ() - bronzeFeather.getZ();
             double dis = Math.sqrt(dx * dx + dz * dz);
-            bronzeFeather.shoot(dx, dy + dis * (double) 0.02F, dz, 1.6F, (float) (14 - this.level.getDifficulty().getId() * 4));
-            this.level.addFreshEntity(bronzeFeather);
+            bronzeFeather.shoot(dx, dy + dis * (double) 0.02F, dz, 1.6F, (float) (14 - this.level().getDifficulty().getId() * 4));
+            this.level().addFreshEntity(bronzeFeather);
         }
         this.playSound(SoundEvents.TRIDENT_THROW, 1.2F, 1.2F + this.random.nextFloat() * 0.2F);
     }
 
     @Override
     public boolean isInvulnerableTo(DamageSource damageSource) {
-        if (damageSource.isProjectile() && damageSource.getDirectEntity() instanceof BronzeFeather) {
+        if (damageSource.is(DamageTypeTags.IS_PROJECTILE) && damageSource.getDirectEntity() instanceof BronzeFeather) {
             return true;
         }
         return super.isInvulnerableTo(damageSource);

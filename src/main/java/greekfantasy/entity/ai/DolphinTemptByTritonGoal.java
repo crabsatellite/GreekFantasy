@@ -39,7 +39,7 @@ public class DolphinTemptByTritonGoal extends Goal {
             return false;
         }
         // locate nearest triton
-        triton = entity.level.getNearestEntity(Triton.class, TargetingConditions.forNonCombat()
+        triton = entity.level().getNearestEntity(Triton.class, TargetingConditions.forNonCombat()
                         .selector(t -> ingredient.test(t.getOffhandItem()) && t.isInWaterOrBubble()),
                 entity, entity.getX(), entity.getY(), entity.getZ(), entity.getBoundingBox().inflate(10.0D));
         if (null == triton || triton.getTarget() != null) {

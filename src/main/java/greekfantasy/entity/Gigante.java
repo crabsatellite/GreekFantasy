@@ -102,19 +102,19 @@ public class Gigante extends PathfinderMob implements NeutralMob {
         attackCooldown = Math.max(attackCooldown - 1, 0);
 
         // particles
-        if (level.isClientSide() && this.getDeltaMovement().horizontalDistanceSqr() > (double) 2.5000003E-7F && this.random.nextInt(5) == 0) {
+        if (level().isClientSide() && this.getDeltaMovement().horizontalDistanceSqr() > (double) 2.5000003E-7F && this.random.nextInt(5) == 0) {
             int i = Mth.floor(this.getX());
             int j = Mth.floor(this.getY() - (double) 0.2F);
             int k = Mth.floor(this.getZ());
-            BlockPos pos = new BlockPos(i, j, k);
-            BlockState blockstate = this.level.getBlockState(pos);
+            BlockPos pos = BlockPos.containing(i, j, k);
+            BlockState blockstate = this.level().getBlockState(pos);
             if (!blockstate.isAir()) {
-                this.level.addParticle(new BlockParticleOption(ParticleTypes.BLOCK, blockstate).setPos(pos), this.getX() + ((double) this.random.nextFloat() - 0.5D) * (double) this.getBbWidth(), this.getY() + 0.1D, this.getZ() + ((double) this.random.nextFloat() - 0.5D) * (double) this.getBbWidth(), 4.0D * ((double) this.random.nextFloat() - 0.5D), 0.5D, ((double) this.random.nextFloat() - 0.5D) * 4.0D);
+                this.level().addParticle(new BlockParticleOption(ParticleTypes.BLOCK, blockstate).setPos(pos), this.getX() + ((double) this.random.nextFloat() - 0.5D) * (double) this.getBbWidth(), this.getY() + 0.1D, this.getZ() + ((double) this.random.nextFloat() - 0.5D) * (double) this.getBbWidth(), 4.0D * ((double) this.random.nextFloat() - 0.5D), 0.5D, ((double) this.random.nextFloat() - 0.5D) * 4.0D);
             }
         }
 
-        if (!this.level.isClientSide()) {
-            this.updatePersistentAnger((ServerLevel) this.level, true);
+        if (!this.level().isClientSide()) {
+            this.updatePersistentAnger((ServerLevel) this.level(), true);
         }
 
     }
@@ -220,7 +220,7 @@ public class Gigante extends PathfinderMob implements NeutralMob {
     @Override
     public void readAdditionalSaveData(CompoundTag compound) {
         super.readAdditionalSaveData(compound);
-        this.readPersistentAngerSaveData(this.level, compound);
+        this.readPersistentAngerSaveData(this.level(), compound);
     }
 
     @Override

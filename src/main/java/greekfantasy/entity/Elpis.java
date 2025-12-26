@@ -1,4 +1,5 @@
 package greekfantasy.entity;
+import net.minecraft.core.registries.Registries;
 
 import greekfantasy.GFRegistry;
 import greekfantasy.GreekFantasy;
@@ -126,22 +127,22 @@ public class Elpis extends PathfinderMob implements FlyingAnimal {
     public void tick() {
         super.tick();
         setNoGravity(true);
-        if (this.level.isClientSide() && random.nextInt(9) == 0) {
+        if (this.level().isClientSide() && random.nextInt(9) == 0) {
             // add particles
             final double radius = 0.25D;
             if (isTrading()) {
                 // trading particles
-                level.addParticle(ParticleTypes.INSTANT_EFFECT,
-                        this.getX() + (level.random.nextDouble() - 0.5D) * radius,
-                        this.getEyeY() + (level.random.nextDouble() - 0.5D) * radius * 0.75D,
-                        this.getZ() + (level.random.nextDouble() - 0.5D) * radius,
+                level().addParticle(ParticleTypes.INSTANT_EFFECT,
+                        this.getX() + (level().random.nextDouble() - 0.5D) * radius,
+                        this.getEyeY() + (level().random.nextDouble() - 0.5D) * radius * 0.75D,
+                        this.getZ() + (level().random.nextDouble() - 0.5D) * radius,
                         0, 0, 0);
             } else {
                 // ambient particles
-                level.addParticle(ParticleTypes.AMBIENT_ENTITY_EFFECT,
-                        this.getX() + (level.random.nextDouble() - 0.5D) * radius,
-                        this.getEyeY() + (level.random.nextDouble() - 0.5D) * radius * 0.75D,
-                        this.getZ() + (level.random.nextDouble() - 0.5D) * radius,
+                level().addParticle(ParticleTypes.AMBIENT_ENTITY_EFFECT,
+                        this.getX() + (level().random.nextDouble() - 0.5D) * radius,
+                        this.getEyeY() + (level().random.nextDouble() - 0.5D) * radius * 0.75D,
+                        this.getZ() + (level().random.nextDouble() - 0.5D) * radius,
                         1.0F, 0.60F, 0.92F);
             }
         }
@@ -167,7 +168,7 @@ public class Elpis extends PathfinderMob implements FlyingAnimal {
 
     @Override
     protected SoundEvent getAmbientSound() {
-        return SoundEvents.NOTE_BLOCK_CHIME;
+        return SoundEvents.NOTE_BLOCK_CHIME.value();
     }
 
     @Override
@@ -231,7 +232,7 @@ public class Elpis extends PathfinderMob implements FlyingAnimal {
             final int x = compound.getInt(KEY_HOME + ".x");
             final int y = compound.getInt(KEY_HOME + ".y");
             final int z = compound.getInt(KEY_HOME + ".z");
-            this.restrictTo(new BlockPos(x, y, z), wanderDistance);
+            this.restrictTo(BlockPos.containing(x, y, z), wanderDistance);
         }
     }
 
@@ -255,8 +256,8 @@ public class Elpis extends PathfinderMob implements FlyingAnimal {
         this.getEntityData().set(STATE, state);
         if (state == STATE_DESPAWNING) {
             despawnTime = 1;
-            if (!level.isClientSide()) {
-                level.broadcastEntityEvent(this, DESPAWN_EVENT);
+            if (!level().isClientSide()) {
+                this.level().broadcastEntityEvent(this, DESPAWN_EVENT);
             }
         }
     }
@@ -316,7 +317,7 @@ public class Elpis extends PathfinderMob implements FlyingAnimal {
 
     @Override
     public boolean isFlying() {
-        return level.getBlockState(this.getBlockPosBelowThatAffectsMyMovement()).isAir();
+        return level().getBlockState(this.getBlockPosBelowThatAffectsMyMovement()).isAir();
     }
 
     // Trading goal
@@ -336,7 +337,7 @@ public class Elpis extends PathfinderMob implements FlyingAnimal {
 
         @Override
         public boolean canUse() {
-            player = Elpis.this.level.getNearestPlayer(Elpis.this, 8.0D);
+            player = Elpis.this.level().getNearestPlayer(Elpis.this, 8.0D);
             return player != null && Elpis.this.isTrading();
         }
 
@@ -361,7 +362,7 @@ public class Elpis extends PathfinderMob implements FlyingAnimal {
                 Elpis.this.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
                 // start despawning
                 Elpis.this.setState(STATE_DESPAWNING);
-                level.broadcastEntityEvent(Elpis.this, DESPAWN_EVENT);
+                Elpis.this.level().broadcastEntityEvent(Elpis.this, DESPAWN_EVENT);
             }
         }
 
@@ -434,7 +435,7 @@ public class Elpis extends PathfinderMob implements FlyingAnimal {
         public void start() {
             Vec3 vec3 = this.findPos();
             if (vec3 != null) {
-                Elpis.this.navigation.moveTo(Elpis.this.navigation.createPath(new BlockPos(vec3), 1), speed);
+                Elpis.this.navigation.moveTo(Elpis.this.navigation.createPath(BlockPos.containing(vec3), 1), speed);
             }
 
         }

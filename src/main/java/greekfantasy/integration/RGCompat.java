@@ -49,6 +49,8 @@ public final class RGCompat {
     }
 
     private boolean hasFavorRange(final Player player, final ResourceLocation deity, final int min, final int max) {
+        // TODO: Re-enable when RPGGods is available for 1.20.1
+        /*
         if (!GreekFantasy.isRGLoaded()) {
             return false;
         }
@@ -58,10 +60,13 @@ public final class RGCompat {
             final int level = favor.getFavor(deity).getLevel();
             return level >= min && level <= max;
         }
+        */
         return false;
     }
 
     private boolean hasPatron(final Player player, final ResourceLocation deity) {
+        // TODO: Re-enable when RPGGods is available for 1.20.1
+        /*
         if (!GreekFantasy.isRGLoaded()) {
             return false;
         }
@@ -71,6 +76,7 @@ public final class RGCompat {
             Optional<ResourceLocation> patron = favor.getPatron();
             return patron.isPresent() && deity.equals(patron.get());
         }
+        */
         return false;
     }
 }

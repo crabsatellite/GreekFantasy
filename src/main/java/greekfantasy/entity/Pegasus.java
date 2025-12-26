@@ -1,5 +1,8 @@
 package greekfantasy.entity;
 
+import java.util.function.DoubleSupplier;
+import java.util.function.IntUnaryOperator;
+
 import greekfantasy.GFRegistry;
 import greekfantasy.entity.util.HasHorseVariant;
 import net.minecraft.Util;
@@ -45,7 +48,8 @@ import javax.annotation.Nullable;
 
 public class Pegasus extends AbstractHorse implements FlyingAnimal, HasHorseVariant {
 
-    private static final EntityDataAccessor<Integer> VARIANT = SynchedEntityData.defineId(Pegasus.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> VARIANT = SynchedEntityData.defineId(Pegasus.class,
+            EntityDataSerializers.INT);
     private static final String KEY_VARIANT = "Variant";
 
     private static final int FLYING_INTERVAL = 8;
@@ -89,9 +93,9 @@ public class Pegasus extends AbstractHorse implements FlyingAnimal, HasHorseVari
     @Override
     public PathNavigation getNavigation() {
         if (this.isPassenger() && this.getVehicle() instanceof Mob) {
-            Mob mob = (Mob)this.getVehicle();
+            Mob mob = (Mob) this.getVehicle();
             return mob.getNavigation();
-        } else if(this.isFlying()) {
+        } else if (this.isFlying()) {
             return this.flyingNavigation;
         } else {
             return this.groundNavigation;
@@ -109,15 +113,15 @@ public class Pegasus extends AbstractHorse implements FlyingAnimal, HasHorseVari
             isFlying = false;
         }
         // setting this to true here allows smooth client-side motion
-        this.onGround = true;
+        this.setOnGround(true);
         // fall slowly when being ridden
         if (isVehicle() && this.getDeltaMovement().y < -0.1D) {
             this.setDeltaMovement(this.getDeltaMovement().multiply(1.0, 0.95D, 1.0));
         }
 
         // take damage when too high
-        if (this.position().y > this.level.getHeight() + 16) {
-            this.hurt(DamageSource.OUT_OF_WORLD, 2.0F);
+        if (this.position().y > this.level().getHeight() + 16) {
+            this.hurt(this.damageSources().fellOutOfWorld(), 2.0F);
         }
     }
 
@@ -126,35 +130,33 @@ public class Pegasus extends AbstractHorse implements FlyingAnimal, HasHorseVari
         return this.isTamed() || super.requiresCustomPersistence();
     }
 
-
     // CALLED FROM ON INITIAL SPAWN //
 
     @Override
     protected void randomizeAttributes(RandomSource random) {
-        this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(this.generateRandomMaxHealth(random));
-        this.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(this.generateRandomSpeed(random));
-        this.getAttribute(Attributes.JUMP_STRENGTH).setBaseValue(this.generateRandomJumpStrength(random));
-        this.getAttribute(Attributes.FLYING_SPEED).setBaseValue(this.getAttributeValue(Attributes.MOVEMENT_SPEED) + 1.15D);
+        this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(generateMaxHealthBonus(random::nextInt));
+        this.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(generateSpeedValue(random::nextDouble));
+        this.getAttribute(Attributes.JUMP_STRENGTH).setBaseValue(generateJumpStrengthBonus(random::nextDouble));
+        this.getAttribute(Attributes.FLYING_SPEED)
+                .setBaseValue(this.getAttributeValue(Attributes.MOVEMENT_SPEED) + 1.15D);
     }
 
-    @Override
-    protected float generateRandomMaxHealth(RandomSource random) {
-        return super.generateRandomMaxHealth(random) + 10.0F;
+    private static float generateMaxHealthBonus(IntUnaryOperator random) {
+        return AbstractHorse.generateMaxHealth(random) + 10.0F;
     }
 
-    @Override
-    protected double generateRandomJumpStrength(RandomSource random) {
-        return super.generateRandomJumpStrength(random) + 0.20F;
+    private static double generateJumpStrengthBonus(DoubleSupplier random) {
+        return AbstractHorse.generateJumpStrength(random) + 0.20F;
     }
 
-    @Override
-    protected double generateRandomSpeed(RandomSource random) {
-        return super.generateRandomSpeed(random);
+    private static double generateSpeedValue(DoubleSupplier random) {
+        return AbstractHorse.generateSpeed(random);
     }
 
     @Nullable
-    public SpawnGroupData finalizeSpawn(ServerLevelAccessor worldIn, DifficultyInstance difficulty, MobSpawnType mobSpawnType,
-                                        @Nullable SpawnGroupData spawnDataIn, @Nullable CompoundTag dataTag) {
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor worldIn, DifficultyInstance difficulty,
+            MobSpawnType mobSpawnType,
+            @Nullable SpawnGroupData spawnDataIn, @Nullable CompoundTag dataTag) {
         Variant color;
         if (spawnDataIn instanceof Horse.HorseGroupData) {
             color = ((Horse.HorseGroupData) spawnDataIn).variant;
@@ -185,7 +187,7 @@ public class Pegasus extends AbstractHorse implements FlyingAnimal, HasHorseVari
             float jumpMotion = (float) this.getCustomJump() + 0.82F;
             this.push(0, jumpMotion, 0);
             this.markHurt();
-            this.onGround = true;
+            this.setOnGround(true);
             // reset flying time
             flyingTime = FLYING_INTERVAL;
             isFlying = true;
@@ -194,8 +196,8 @@ public class Pegasus extends AbstractHorse implements FlyingAnimal, HasHorseVari
 
     @Override
     public void handleStartJump(int jumpPower) {
-        //super.handleStartJump(jumpPower);
-        if (!this.onGround) {
+        // super.handleStartJump(jumpPower);
+        if (!this.onGround()) {
             this.setStanding(false);
         }
     }
@@ -208,7 +210,7 @@ public class Pegasus extends AbstractHorse implements FlyingAnimal, HasHorseVari
     @Override
     public boolean isFlying() {
         final double flyingMotion = isBaby() ? 0.02D : 0.06D;
-        return !this.onGround || this.getDeltaMovement().lengthSqr() > flyingMotion;
+        return !this.onGround() || this.getDeltaMovement().lengthSqr() > flyingMotion;
     }
 
     @Override
@@ -271,7 +273,7 @@ public class Pegasus extends AbstractHorse implements FlyingAnimal, HasHorseVari
         if (!this.isBaby()) {
             if (this.isTamed() && player.isSecondaryUseActive()) {
                 this.openCustomInventoryScreen(player);
-                return InteractionResult.sidedSuccess(this.level.isClientSide());
+                return InteractionResult.sidedSuccess(this.level().isClientSide());
             }
 
             if (this.isVehicle()) {
@@ -280,7 +282,7 @@ public class Pegasus extends AbstractHorse implements FlyingAnimal, HasHorseVari
 
             if ((itemstack.isEmpty() && this.isTamed()) || itemstack.is(GFRegistry.ItemReg.GOLDEN_BRIDLE.get())) {
                 this.doPlayerRide(player);
-                return InteractionResult.sidedSuccess(this.level.isClientSide());
+                return InteractionResult.sidedSuccess(this.level().isClientSide());
             }
         }
 
@@ -296,13 +298,13 @@ public class Pegasus extends AbstractHorse implements FlyingAnimal, HasHorseVari
 
             if (!this.isTamed()) {
                 this.makeMad();
-                return InteractionResult.sidedSuccess(this.level.isClientSide());
+                return InteractionResult.sidedSuccess(this.level().isClientSide());
             }
 
             boolean isUsableSaddle = !this.isBaby() && !this.isSaddled() && itemstack.is(Items.SADDLE);
             if (this.isArmor(itemstack) || isUsableSaddle) {
                 this.openCustomInventoryScreen(player);
-                return InteractionResult.sidedSuccess(this.level.isClientSide());
+                return InteractionResult.sidedSuccess(this.level().isClientSide());
             }
         }
 
@@ -386,7 +388,8 @@ public class Pegasus extends AbstractHorse implements FlyingAnimal, HasHorseVari
 
         public AvoidPlayersGoal(final Pegasus pegasus) {
             super(pegasus, Player.class, 16.0F, 1.2D, 1.1D, (entity) -> !entity.isDiscrete() && !pegasus.isVehicle()
-                    && (!pegasus.isTamed() || pegasus.getOwnerUUID() == null || !entity.getUUID().equals(pegasus.getOwnerUUID())));
+                    && (!pegasus.isTamed() || pegasus.getOwnerUUID() == null
+                            || !entity.getUUID().equals(pegasus.getOwnerUUID())));
         }
 
         @Override

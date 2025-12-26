@@ -1,5 +1,7 @@
 package greekfantasy.entity;
 
+import net.minecraft.core.registries.Registries;
+
 import com.google.common.collect.ImmutableMap;
 import greekfantasy.GFRegistry;
 import greekfantasy.GreekFantasy;
@@ -25,6 +27,7 @@ import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -71,12 +74,14 @@ import java.util.function.Supplier;
 
 public class Dryad extends PathfinderMob implements NeutralMob, TradingMob {
 
-    protected static final EntityDataAccessor<String> DATA_VARIANT = SynchedEntityData.defineId(Dryad.class, EntityDataSerializers.STRING);
+    protected static final EntityDataAccessor<String> DATA_VARIANT = SynchedEntityData.defineId(Dryad.class,
+            EntityDataSerializers.STRING);
     protected static final String KEY_VARIANT = "Variant";
     protected static final String KEY_TREE_POS = "Tree";
     protected static final String KEY_HIDING = "HidingTime";
 
-    protected static final TagKey<Item> DRYAD_TRADE = ItemTags.create(new ResourceLocation(GreekFantasy.MODID, "dryad_trade"));
+    protected static final TagKey<Item> DRYAD_TRADE = ItemTags
+            .create(new ResourceLocation(GreekFantasy.MODID, "dryad_trade"));
 
     private static final byte FINISH_TRADE_EVENT = 9;
 
@@ -113,12 +118,14 @@ public class Dryad extends PathfinderMob implements NeutralMob, TradingMob {
         this.goalSelector.addGoal(3, new Dryad.FindTreeGoal(8, 28));
         this.goalSelector.addGoal(4, new Dryad.HideGoal(640));
         this.goalSelector.addGoal(5, new Dryad.GoToTreeGoal(0.9F, 320));
-        this.goalSelector.addGoal(7, new AvoidEntityGoal<>(this, Satyr.class, 10.0F, 1.2D, 1.1D, (entity) -> !this.isHiding() && !this.isGoingToTree && this.tradingPlayer != null));
+        this.goalSelector.addGoal(7, new AvoidEntityGoal<>(this, Satyr.class, 10.0F, 1.2D, 1.1D,
+                (entity) -> !this.isHiding() && !this.isGoingToTree && this.tradingPlayer != null));
         this.goalSelector.addGoal(8, new Dryad.RandomStrollWhenNotHidingGoal(0.8F, 140));
         this.goalSelector.addGoal(9, new LookAtPlayerGoal(this, Player.class, 6.0F));
         this.goalSelector.addGoal(10, new RandomLookAroundGoal(this));
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
-        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, 10, true, false, this::isAngryAt));
+        this.targetSelector.addGoal(2,
+                new NearestAttackableTargetGoal<>(this, Player.class, 10, true, false, this::isAngryAt));
         this.targetSelector.addGoal(3, new ResetUniversalAngerTargetGoal<>(this, true));
     }
 
@@ -132,7 +139,7 @@ public class Dryad extends PathfinderMob implements NeutralMob, TradingMob {
     public void aiStep() {
         super.aiStep();
         // if entity has a tree position, check if it no longer exists
-        if (this.tickCount % 28 == 0 && treePos != null && !isTreeAt(level, treePos, getVariant().getLogs())) {
+        if (this.tickCount % 28 == 0 && treePos != null && !isTreeAt(level(), treePos, getVariant().getLogs())) {
             // if entity was hiding, exit the tree
             this.tryExitTree();
             this.isGoingToTree = false;
@@ -147,8 +154,8 @@ public class Dryad extends PathfinderMob implements NeutralMob, TradingMob {
         }
 
         // anger timer
-        if (!this.level.isClientSide()) {
-            this.updatePersistentAnger((ServerLevel) this.level, true);
+        if (!this.level().isClientSide()) {
+            this.updatePersistentAnger((ServerLevel) this.level(), true);
         }
     }
 
@@ -181,7 +188,7 @@ public class Dryad extends PathfinderMob implements NeutralMob, TradingMob {
     @Override
     public boolean isInvulnerableTo(final DamageSource source) {
         // immune to suffocation while hiding
-        if (source == DamageSource.IN_WALL && this.isHiding()) {
+        if (source.is(DamageTypes.IN_WALL) && this.isHiding()) {
             return true;
         }
         return super.isInvulnerableTo(source);
@@ -216,22 +223,24 @@ public class Dryad extends PathfinderMob implements NeutralMob, TradingMob {
     public void readAdditionalSaveData(CompoundTag compound) {
         super.readAdditionalSaveData(compound);
         this.setVariant(getVariantByName(compound.getString(KEY_VARIANT)));
-        this.readPersistentAngerSaveData(this.level, compound);
+        this.readPersistentAngerSaveData(this.level(), compound);
         if (compound.contains(KEY_TREE_POS + ".x")) {
             final int x = compound.getInt(KEY_TREE_POS + ".x");
             final int y = compound.getInt(KEY_TREE_POS + ".y");
             final int z = compound.getInt(KEY_TREE_POS + ".z");
-            this.setTreePos(new BlockPos(x, y, z));
+            this.setTreePos(BlockPos.containing(x, y, z));
         }
         this.hidingTime = compound.getInt(KEY_HIDING);
     }
 
     @Override
-    public SpawnGroupData finalizeSpawn(ServerLevelAccessor worldIn, DifficultyInstance difficultyIn, MobSpawnType mobType,
-                                        @Nullable SpawnGroupData spawnDataIn, @Nullable CompoundTag dataTag) {
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor worldIn, DifficultyInstance difficultyIn,
+            MobSpawnType mobType,
+            @Nullable SpawnGroupData spawnDataIn, @Nullable CompoundTag dataTag) {
         SpawnGroupData data = super.finalizeSpawn(worldIn, difficultyIn, mobType, spawnDataIn, dataTag);
         final NymphVariant variant;
-        if (mobType == MobSpawnType.COMMAND || mobType == MobSpawnType.SPAWN_EGG || mobType == MobSpawnType.SPAWNER || mobType == MobSpawnType.DISPENSER) {
+        if (mobType == MobSpawnType.COMMAND || mobType == MobSpawnType.SPAWN_EGG || mobType == MobSpawnType.SPAWNER
+                || mobType == MobSpawnType.DISPENSER) {
             variant = getRandomVariant(getRandom());
         } else {
             variant = getVariantForBiome(worldIn.getBiome(this.blockPosition()));
@@ -319,7 +328,7 @@ public class Dryad extends PathfinderMob implements NeutralMob, TradingMob {
     @Override
     public void trade(PathfinderMob self, @Nullable final Player player, final ItemStack tradeItem) {
         TradingMob.super.trade(self, player, tradeItem);
-        this.level.broadcastEntityEvent(this, FINISH_TRADE_EVENT);
+        this.level().broadcastEntityEvent(this, FINISH_TRADE_EVENT);
     }
 
     @Override
@@ -329,7 +338,10 @@ public class Dryad extends PathfinderMob implements NeutralMob, TradingMob {
                 // swing arm and play sound
                 this.swing(InteractionHand.MAIN_HAND, true);
                 for (int i = 0; i < 4; i++) {
-                    this.level.addParticle(ParticleTypes.HAPPY_VILLAGER, this.getX() + 0.5D * (random.nextDouble() - 0.5D), this.getEyeY() + 0.5D * (random.nextDouble() - 0.5D), this.getZ() + 0.5D * (random.nextDouble() - 0.5D), 0, 0, 0);
+                    this.level().addParticle(ParticleTypes.HAPPY_VILLAGER,
+                            this.getX() + 0.5D * (random.nextDouble() - 0.5D),
+                            this.getEyeY() + 0.5D * (random.nextDouble() - 0.5D),
+                            this.getZ() + 0.5D * (random.nextDouble() - 0.5D), 0, 0, 0);
                 }
                 break;
             default:
@@ -382,7 +394,8 @@ public class Dryad extends PathfinderMob implements NeutralMob, TradingMob {
     }
 
     public boolean isHiding() {
-        return hidingTime > 0 || this.level.getBlockState(this.blockPosition().above()).is(this.getVariant().getLogs());
+        return hidingTime > 0
+                || this.level().getBlockState(this.blockPosition().above()).is(this.getVariant().getLogs());
     }
 
     public void setHiding(final boolean hiding) {
@@ -408,9 +421,11 @@ public class Dryad extends PathfinderMob implements NeutralMob, TradingMob {
      * @return if this block pos is supporting a likely tree
      **/
     public static boolean isTreeAt(final BlockGetter level, final BlockPos pos, final TagKey<Block> logs) {
-        // a "tree" is considered two log blocks on top of a dirt block (or other plant-sustaining block)
+        // a "tree" is considered two log blocks on top of a dirt block (or other
+        // plant-sustaining block)
         final BlockState soil = level.getBlockState(pos);
-        return (soil.is(BlockTags.DIRT)) && level.getBlockState(pos.above(1)).is(logs) && level.getBlockState(pos.above(2)).is(logs);
+        return (soil.is(BlockTags.DIRT)) && level.getBlockState(pos.above(1)).is(logs)
+                && level.getBlockState(pos.above(2)).is(logs);
     }
 
     /**
@@ -428,7 +443,7 @@ public class Dryad extends PathfinderMob implements NeutralMob, TradingMob {
                 double y = this.getY() + random.nextInt(radius) - radius / 2.0D;
                 double z = this.getZ() + random.nextInt(radius * 2) - radius;
                 // try to path to the position
-                if (level.noCollision(this, this.getType().getAABB(x, y, z))) {
+                if (level().noCollision(this, this.getType().getAABB(x, y, z))) {
                     this.getNavigation().moveTo(x, y, z, 1.0D);
                     return true;
                 }
@@ -468,8 +483,9 @@ public class Dryad extends PathfinderMob implements NeutralMob, TradingMob {
         public boolean canUse() {
             if (cooldown > 0) {
                 cooldown--;
-            } else if (Dryad.this.treePos != null && Dryad.this.isWithinDistanceOfTree(1.5D) && Dryad.this.getTarget() == null) {
-                return isTreeAt(Dryad.this.level, Dryad.this.treePos, Dryad.this.getVariant().getLogs());
+            } else if (Dryad.this.treePos != null && Dryad.this.isWithinDistanceOfTree(1.5D)
+                    && Dryad.this.getTarget() == null) {
+                return isTreeAt(Dryad.this.level(), Dryad.this.treePos, Dryad.this.getVariant().getLogs());
             }
             return false;
         }
@@ -520,8 +536,8 @@ public class Dryad extends PathfinderMob implements NeutralMob, TradingMob {
                 return false;
             }
             // ensure the block is not claimed by nearby dryads
-            List<Dryad> dryads = Dryad.this.level.getEntitiesOfClass(Dryad.class, Dryad.this.getBoundingBox().inflate(10.0D), e ->
-                    pos.equals(e.treePos));
+            List<Dryad> dryads = Dryad.this.level().getEntitiesOfClass(Dryad.class,
+                    Dryad.this.getBoundingBox().inflate(10.0D), e -> pos.equals(e.treePos));
             // if any dryads were found with the given tree, reject this position
             return dryads.isEmpty();
         }
@@ -583,13 +599,20 @@ public class Dryad extends PathfinderMob implements NeutralMob, TradingMob {
     }
 
     public static class Variant implements NymphVariant {
-        public static final Variant ACACIA = new Variant("acacia", new ResourceLocation("forge", "is_savanna"), () -> Blocks.ACACIA_SAPLING);
-        public static final Variant BIRCH = new Variant("birch", new ResourceLocation("forge", "is_birch"), () -> Blocks.BIRCH_SAPLING);
-        public static final Variant DARK_OAK = new Variant("dark_oak", new ResourceLocation("forge", "is_spooky"), () -> Blocks.DARK_OAK_SAPLING);
-        public static final Variant JUNGLE = new Variant("jungle", new ResourceLocation("minecraft", "is_jungle"), () -> Blocks.JUNGLE_SAPLING);
-        public static final Variant OAK = new Variant("oak", new ResourceLocation("forge", "is_plains"), () -> Blocks.OAK_SAPLING);
-        public static final Variant SPRUCE = new Variant("spruce", new ResourceLocation("minecraft", "is_taiga"), () -> Blocks.SPRUCE_SAPLING);
-        public static final Variant OLIVE = new Variant(GreekFantasy.MODID, "olive", new ResourceLocation("forge", "is_olive"), () -> GFRegistry.BlockReg.OLIVE_SAPLING.get());
+        public static final Variant ACACIA = new Variant("acacia", new ResourceLocation("forge", "is_savanna"),
+                () -> Blocks.ACACIA_SAPLING);
+        public static final Variant BIRCH = new Variant("birch", new ResourceLocation("forge", "is_birch"),
+                () -> Blocks.BIRCH_SAPLING);
+        public static final Variant DARK_OAK = new Variant("dark_oak", new ResourceLocation("forge", "is_spooky"),
+                () -> Blocks.DARK_OAK_SAPLING);
+        public static final Variant JUNGLE = new Variant("jungle", new ResourceLocation("minecraft", "is_jungle"),
+                () -> Blocks.JUNGLE_SAPLING);
+        public static final Variant OAK = new Variant("oak", new ResourceLocation("forge", "is_plains"),
+                () -> Blocks.OAK_SAPLING);
+        public static final Variant SPRUCE = new Variant("spruce", new ResourceLocation("minecraft", "is_taiga"),
+                () -> Blocks.SPRUCE_SAPLING);
+        public static final Variant OLIVE = new Variant(GreekFantasy.MODID, "olive",
+                new ResourceLocation("forge", "is_olive"), () -> GFRegistry.BlockReg.OLIVE_SAPLING.get());
 
         public static ImmutableMap<String, Variant> OVERWORLD = ImmutableMap.<String, Variant>builder()
                 .put(ACACIA.name, ACACIA).put(BIRCH.name, BIRCH).put(DARK_OAK.name, DARK_OAK)
@@ -608,13 +631,14 @@ public class Dryad extends PathfinderMob implements NeutralMob, TradingMob {
             this("minecraft", nameIn, ForgeRegistries.BIOMES.tags().createTagKey(biomeTag), "dryad", "logs", saplingIn);
         }
 
-        protected Variant(final String modid, final String nameIn, final ResourceLocation biomeTag, final Supplier<Block> saplingIn) {
+        protected Variant(final String modid, final String nameIn, final ResourceLocation biomeTag,
+                final Supplier<Block> saplingIn) {
             this(modid, nameIn, ForgeRegistries.BIOMES.tags().createTagKey(biomeTag), "dryad", "logs", saplingIn);
         }
 
         protected Variant(final String modid, final String nameIn, final TagKey<Biome> biome,
-                          final String entityIn, final String tagSuffixIn,
-                          final Supplier<Block> saplingIn) {
+                final String entityIn, final String tagSuffixIn,
+                final Supplier<Block> saplingIn) {
             this.name = nameIn;
             this.biomeTag = biome;
             this.sapling = saplingIn;

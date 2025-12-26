@@ -148,16 +148,6 @@ public abstract class EnchantedBowItem extends BowItem {
     }
 
     @Override
-    public void fillItemCategory(CreativeModeTab group, NonNullList<ItemStack> items) {
-        // add the item to the group with enchantment already applied
-        if (this.allowedIn(group)) {
-            ItemStack stack = new ItemStack(this);
-            checkAndApplyBaseEnchantments(stack);
-            items.add(stack);
-        }
-    }
-
-    @Override
     public void onCraftedBy(ItemStack stack, Level level, Player playerIn) {
         checkAndApplyBaseEnchantments(stack);
     }
@@ -246,7 +236,7 @@ public abstract class EnchantedBowItem extends BowItem {
         public void appendHoverText(ItemStack itemStack, @Nullable Level level, List<Component> list, TooltipFlag flag) {
             // add multishot tooltip
             list.add(Component.translatable(Enchantments.MULTISHOT.getDescriptionId()).withStyle(ChatFormatting.AQUA)
-                    .append(" ").append(Component.translatable("enchantment.level.2").withStyle(ChatFormatting.AQUA)));
+                    .append(" ").append(Component.translatable("enchantment.level().2").withStyle(ChatFormatting.AQUA)));
         }
     }
 
@@ -292,7 +282,7 @@ public abstract class EnchantedBowItem extends BowItem {
         public void appendHoverText(ItemStack itemStack, @Nullable Level level, List<Component> list, TooltipFlag flag) {
             // add multishot tooltip
             list.add(Component.translatable(Enchantments.MULTISHOT.getDescriptionId()).withStyle(ChatFormatting.AQUA)
-                    .append(" ").append(Component.translatable("enchantment.level.1").withStyle(ChatFormatting.AQUA)));
+                    .append(" ").append(Component.translatable("enchantment.level().1").withStyle(ChatFormatting.AQUA)));
         }
     }
 }

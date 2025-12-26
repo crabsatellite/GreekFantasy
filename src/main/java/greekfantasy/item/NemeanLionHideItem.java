@@ -22,7 +22,17 @@ public class NemeanLionHideItem extends ArmorItem {
     private static final String TEXTURE_1 = new ResourceLocation(GreekFantasy.MODID, "textures/models/armor/nemean_layer_1.png").toString();
 
     public NemeanLionHideItem(final ArmorMaterial armorMaterial, final EquipmentSlot slot, Properties builderIn) {
-        super(armorMaterial, slot, builderIn);
+        super(armorMaterial, typeFromSlot(slot), builderIn);
+    }
+
+    private static ArmorItem.Type typeFromSlot(EquipmentSlot slot) {
+        return switch (slot) {
+            case HEAD -> ArmorItem.Type.HELMET;
+            case CHEST -> ArmorItem.Type.CHESTPLATE;
+            case LEGS -> ArmorItem.Type.LEGGINGS;
+            case FEET -> ArmorItem.Type.BOOTS;
+            default -> throw new IllegalArgumentException("Invalid equipment slot: " + slot);
+        };
     }
 
     public static boolean isImmune(final LivingEntity entity, final Projectile projectile, final double dotProduct) {

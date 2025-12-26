@@ -1,4 +1,5 @@
 package greekfantasy.enchantment;
+import net.minecraft.core.registries.Registries;
 
 import greekfantasy.GFRegistry;
 import greekfantasy.GreekFantasy;
@@ -44,9 +45,9 @@ public class SmashingEnchantment extends Enchantment {
 
     private static void useSmashAttack(final LivingEntity user, final Entity target, final int level) {
         // if entitiy is touching the ground, knock it into the air and apply stun
-        if (target.isOnGround() && !isExemptFromSmashAttack(target)) {
+        if (target.onGround() && !isExemptFromSmashAttack(target)) {
             target.push(0.0D, 0.35D + (0.05D * level), 0.0D);
-            target.hurt(DamageSource.mobAttack(user), 0.25F);
+            target.hurt(user.damageSources().mobAttack(user), 0.25F);
             // stun effect (for living entities)
             if (target instanceof LivingEntity) {
                 final LivingEntity entity = (LivingEntity) target;
@@ -76,7 +77,7 @@ public class SmashingEnchantment extends Enchantment {
         final Vec3 facing = Vec3.directionFromRotation(user.getRotationVector()).normalize();
         final AABB aabb = new AABB(target.blockPosition().above()).inflate(range, BASE_RANGE, range).move(facing.scale(range));
         // smash attack entities within range
-        user.level.getEntities(user, aabb).forEach(e -> useSmashAttack(user, e, level));
+        user.level().getEntities(user, aabb).forEach(e -> useSmashAttack(user, e, level));
     }*/
 
     @Override
@@ -95,7 +96,7 @@ public class SmashingEnchantment extends Enchantment {
         final Vec3 facing = Vec3.directionFromRotation(user.getRotationVector()).normalize();
         final AABB aabb = new AABB(target.blockPosition().above()).inflate(range, BASE_RANGE, range).move(facing.scale(range));
         // smash attack entities within range
-        user.level.getEntities(user, aabb).forEach(e -> useSmashAttack(user, e, level));
+        user.level().getEntities(user, aabb).forEach(e -> useSmashAttack(user, e, level));
         // apply cooldown
         if (user instanceof Player player) {
             player.getCooldowns().addCooldown(item.getItem(), Mth.ceil(player.getCurrentItemAttackStrengthDelay()));

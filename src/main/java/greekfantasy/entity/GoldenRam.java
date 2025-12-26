@@ -1,4 +1,5 @@
 package greekfantasy.entity;
+import net.minecraft.core.registries.Registries;
 
 import greekfantasy.GFRegistry;
 import greekfantasy.GreekFantasy;
@@ -73,7 +74,7 @@ public class GoldenRam extends Sheep implements NeutralMob {
         entity.setPersistenceRequired();
         entity.setPortalCooldown();
         entity.setAge(sheep.getAge());
-        level.addFreshEntityWithPassengers(entity);
+        level.addFreshEntity(entity);
         entity.finalizeSpawn(level, level.getCurrentDifficultyAt(sheep.blockPosition()), MobSpawnType.CONVERSION, null, null);
         // remove the old entity
         sheep.discard();
@@ -99,19 +100,19 @@ public class GoldenRam extends Sheep implements NeutralMob {
     public void aiStep() {
         super.aiStep();
         // anger timer
-        if (!this.level.isClientSide()) {
-            this.updatePersistentAnger((ServerLevel) this.level, true);
+        if (!this.level().isClientSide()) {
+            this.updatePersistentAnger((ServerLevel) this.level(), true);
         }
         // when sheared, despawn and replace with regular sheep
         if (this.isSheared()) {
-            Sheep entity = EntityType.SHEEP.create(level);
+            Sheep entity = EntityType.SHEEP.create(level());
             entity.copyPosition(this);
             entity.yBodyRot = this.yBodyRot;
             entity.setPortalCooldown();
             entity.setColor(this.getColor());
             entity.setSheared(true);
             entity.setAge(this.getAge());
-            level.addFreshEntity(entity);
+            level().addFreshEntity(entity);
             // remove self
             this.discard();
         }
@@ -119,8 +120,8 @@ public class GoldenRam extends Sheep implements NeutralMob {
 
     @Override
     public List<ItemStack> onSheared(@Nullable Player player, @Nonnull ItemStack item, Level level, BlockPos pos, int fortune) {
-        level.playSound(null, this, SoundEvents.SHEEP_SHEAR, player == null ? SoundSource.BLOCKS : SoundSource.PLAYERS, 1.0F, 0.8F);
-        if (!level.isClientSide()) {
+        level().playSound(null, this, SoundEvents.SHEEP_SHEAR, player == null ? SoundSource.BLOCKS : SoundSource.PLAYERS, 1.0F, 0.8F);
+        if (!level().isClientSide()) {
             this.setSheared(true);
             // create a list of items to return
             List<ItemStack> items = new ArrayList<>();
@@ -176,7 +177,7 @@ public class GoldenRam extends Sheep implements NeutralMob {
     @Override
     public void readAdditionalSaveData(CompoundTag compound) {
         super.readAdditionalSaveData(compound);
-        this.readPersistentAngerSaveData(this.level, compound);
+        this.readPersistentAngerSaveData(this.level(), compound);
     }
 
     // IAngerable methods

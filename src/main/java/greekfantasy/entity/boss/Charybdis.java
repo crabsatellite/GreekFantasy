@@ -20,6 +20,7 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
@@ -125,7 +126,7 @@ public class Charybdis extends WaterAnimal implements Enemy {
 
     protected Scylla spawnScylla(final ServerLevel level) {
         final Scylla entity = GFRegistry.EntityReg.SCYLLA.get().create(level);
-        final BlockPos entityPos = new BlockPos(position());
+        final BlockPos entityPos = BlockPos.containing(position());
         final BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
         final int radius = Mth.ceil(getBbWidth() * 1.5F);
         AABB aabb;
@@ -143,7 +144,7 @@ public class Charybdis extends WaterAnimal implements Enemy {
                 entity.moveTo(blockPos.getX(), blockPos.getY(), blockPos.getZ(), 0, 0);
                 entity.setPersistenceRequired();
                 entity.setPortalCooldown();
-                level.addFreshEntityWithPassengers(entity);
+                level().addFreshEntity(entity);
                 entity.finalizeSpawn(level, level.getCurrentDifficultyAt(blockPos), MobSpawnType.MOB_SUMMONED, null, null);
                 // play sound
                 entity.playSound(SoundEvents.GHAST_SCREAM, 1.2F, 1.0F);
@@ -219,7 +220,7 @@ public class Charybdis extends WaterAnimal implements Enemy {
         super.tick();
 
         // spawn particles
-        if (this.level.isClientSide() && tickCount % 3 == 0 && this.isInWaterOrBubble()) {
+        if (this.level().isClientSide() && tickCount % 3 == 0 && this.isInWaterOrBubble()) {
             // spawn particles at targeted entities
             getEntitiesInRange(RANGE).forEach(e -> bubbles(e.getX(), e.getY(), e.getZ(), e.getBbWidth(), 5));
             // spawn particles in spiral
@@ -237,7 +238,7 @@ public class Charybdis extends WaterAnimal implements Enemy {
                 float cosA = Mth.cos(a) * radius;
                 float sinA = Mth.sin(a) * radius;
                 //bubbles(posX + cosA, posY + y, posZ + sinA, 0.125D, 1);
-                level.addParticle(ParticleTypes.BUBBLE, posX + cosA, posY + y - (maxY * 0.4), posZ + sinA, 0.0D, 0.085D, 0.0D);
+                level().addParticle(ParticleTypes.BUBBLE, posX + cosA, posY + y - (maxY * 0.4), posZ + sinA, 0.0D, 0.085D, 0.0D);
                 y += dY;
             }
         }
@@ -281,7 +282,7 @@ public class Charybdis extends WaterAnimal implements Enemy {
 
     @Override
     public boolean isInvulnerableTo(final DamageSource source) {
-        return isSpawning() || source == DamageSource.IN_WALL || source == DamageSource.WITHER
+        return isSpawning() || source.is(DamageTypes.IN_WALL) || source.is(DamageTypes.WITHER)
                 || source.getDirectEntity() instanceof AbstractArrow
                 || source.getDirectEntity() instanceof WaterSpell
                 || super.isInvulnerableTo(source);
@@ -410,8 +411,8 @@ public class Charybdis extends WaterAnimal implements Enemy {
                 clientFlag = THROW_CLIENT;
                 break;
         }
-        if (!level.isClientSide()) {
-            level.broadcastEntityEvent(this, clientFlag);
+        if (!level().isClientSide()) {
+            this.level().broadcastEntityEvent(this, clientFlag);
         }
     }
 
@@ -471,19 +472,19 @@ public class Charybdis extends WaterAnimal implements Enemy {
     // Misc //
 
     public List<Entity> getEntitiesInRange(final double range) {
-        return level.getEntities(this, getBoundingBox().inflate(range, range / 2, range), CAN_TARGET);
+        return level().getEntities(this, getBoundingBox().inflate(range, range / 2, range), CAN_TARGET);
     }
 
     public void bubbles(final double posX, final double posY, final double posZ, final double radius, final int count) {
         final double motion = 0.08D;
         for (int i = 0; i < count; i++) {
-            level.addParticle(ParticleTypes.BUBBLE,
-                    posX + (level.random.nextDouble() - 0.5D) * radius,
+            level().addParticle(ParticleTypes.BUBBLE,
+                    posX + (level().random.nextDouble() - 0.5D) * radius,
                     posY,
-                    posZ + (level.random.nextDouble() - 0.5D) * radius,
-                    (level.random.nextDouble() - 0.5D) * motion,
+                    posZ + (level().random.nextDouble() - 0.5D) * radius,
+                    (level().random.nextDouble() - 0.5D) * motion,
                     0.5D,
-                    (level.random.nextDouble() - 0.5D) * motion);
+                    (level().random.nextDouble() - 0.5D) * motion);
         }
     }
 
@@ -526,7 +527,7 @@ public class Charybdis extends WaterAnimal implements Enemy {
                     livingEntity.addEffect(new MobEffectInstance(GFRegistry.MobEffectReg.SLOW_SWIM.get(), 10, 0));
                     // periodically hurt living entities
                     if (livingEntity.hurtTime == 0 && livingEntity.tickCount % 20 == 0) {
-                        livingEntity.hurt(DamageSource.mobAttack(entity), attack);
+                        livingEntity.hurt(entity.damageSources().mobAttack(entity), attack);
                     }
                 }
             }
@@ -542,7 +543,7 @@ public class Charybdis extends WaterAnimal implements Enemy {
         protected void onCollideWith(Entity e) {
             // attack the entity and steal some health
             final float attack = (float) entity.getAttribute(Attributes.ATTACK_DAMAGE).getValue();
-            if (e.hurt(DamageSource.mobAttack(entity), attack)) {
+            if (e.hurt(entity.damageSources().mobAttack(entity), attack)) {
                 entity.heal(Math.abs(attack * 0.25F));
             }
         }
@@ -621,7 +622,7 @@ public class Charybdis extends WaterAnimal implements Enemy {
                         target.hurtMarked = true;
                         // damage boats and other rideable entities
                         if (target instanceof Boat || !target.getPassengers().isEmpty()) {
-                            target.hurt(DamageSource.mobAttack(entity), 6.0F);
+                            target.hurt(entity.damageSources().mobAttack(entity), 6.0F);
                         }
                     }
                 }

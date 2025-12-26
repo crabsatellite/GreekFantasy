@@ -3,6 +3,7 @@ package greekfantasy.network;
 import com.mojang.serialization.Codec;
 import greekfantasy.GreekFantasy;
 import greekfantasy.util.Quest;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
@@ -43,7 +44,7 @@ public class SQuestPacket {
      * @return a new instance of a SQuestPacket based on the PacketBuffer
      */
     public static SQuestPacket fromBytes(final FriendlyByteBuf buf) {
-        final Map<ResourceLocation, Quest> data = buf.readWithCodec(CODEC);
+        final Map<ResourceLocation, Quest> data = buf.readWithCodec(NbtOps.INSTANCE, CODEC);
         return new SQuestPacket(data);
     }
 
@@ -54,7 +55,7 @@ public class SQuestPacket {
      * @param buf the PacketBuffer
      */
     public static void toBytes(final SQuestPacket msg, final FriendlyByteBuf buf) {
-        buf.writeWithCodec(CODEC, msg.data);
+        buf.writeWithCodec(NbtOps.INSTANCE, CODEC, msg.data);
     }
 
     /**

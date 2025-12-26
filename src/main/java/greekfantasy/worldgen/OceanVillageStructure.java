@@ -56,7 +56,7 @@ public class OceanVillageStructure extends Structure {
 
         ChunkPos chunkpos = context.chunkPos();
         int i = this.startHeight.sample(context.random(), new WorldGenerationContext(context.chunkGenerator(), context.heightAccessor()));
-        BlockPos blockpos = new BlockPos(chunkpos.getMinBlockX(), i, chunkpos.getMinBlockZ());
+        BlockPos blockpos = BlockPos.containing(chunkpos.getMinBlockX(), i, chunkpos.getMinBlockZ());
 
         if (!isBelowSeaLevel(context, blockpos, this.minDistanceBelowSeaLevel)) {
             return Optional.empty();

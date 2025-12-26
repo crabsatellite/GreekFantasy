@@ -25,7 +25,7 @@ public class GoToWaterGoal extends Goal {
         this.mob = mob;
         this.speedModifier = speed;
         this.nightOnly = nightOnly;
-        this.level = mob.level;
+        this.level = mob.level();
         this.setFlags(EnumSet.of(Goal.Flag.MOVE));
     }
 
@@ -60,8 +60,9 @@ public class GoToWaterGoal extends Goal {
         RandomSource random = this.mob.getRandom();
         BlockPos blockpos = this.mob.blockPosition();
 
-        for(int i = 0; i < 10; ++i) {
-            BlockPos blockpos1 = blockpos.offset(random.nextInt(20) - 10, 2 - random.nextInt(8), random.nextInt(20) - 10);
+        for (int i = 0; i < 10; ++i) {
+            BlockPos blockpos1 = blockpos.offset(random.nextInt(20) - 10, 2 - random.nextInt(8),
+                    random.nextInt(20) - 10);
             if (this.level.getBlockState(blockpos1).is(Blocks.WATER)) {
                 return Vec3.atBottomCenterOf(blockpos1);
             }

@@ -82,8 +82,8 @@ public class Ara extends PathfinderMob implements NeutralMob {
     public void aiStep() {
         super.aiStep();
         // anger timer
-        if (!this.level.isClientSide()) {
-            this.updatePersistentAnger((ServerLevel) this.level, true);
+        if (!this.level().isClientSide()) {
+            this.updatePersistentAnger((ServerLevel) this.level(), true);
         }
         // when aggressive, equip a weapon
         if (this.isAggressive()) {
@@ -144,7 +144,7 @@ public class Ara extends PathfinderMob implements NeutralMob {
     @Override
     public void readAdditionalSaveData(CompoundTag compound) {
         super.readAdditionalSaveData(compound);
-        this.readPersistentAngerSaveData(this.level, compound);
+        this.readPersistentAngerSaveData(this.level(), compound);
     }
 
     public boolean isHoldingWeapon() {

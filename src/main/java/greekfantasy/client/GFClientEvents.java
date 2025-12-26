@@ -1,5 +1,7 @@
 package greekfantasy.client;
 
+import net.minecraft.core.registries.Registries;
+
 import greekfantasy.GFRegistry;
 import greekfantasy.GreekFantasy;
 import greekfantasy.client.armor.HellenicArmorModel;
@@ -145,7 +147,10 @@ public final class GFClientEvents {
 
     public static final class ForgeHandler {
 
-        /** Used in render living event as a replacement for entities that should be rendered as pigs **/
+        /**
+         * Used in render living event as a replacement for entities that should be
+         * rendered as pigs
+         **/
         private static FakePigRenderer<LivingEntity> pigRenderer;
         /** Used in the client tick event to handle movement when riding a pegasus **/
         private static boolean wasJumping;
@@ -160,17 +165,21 @@ public final class GFClientEvents {
         @SubscribeEvent(priority = EventPriority.HIGH)
         public static void onRenderLiving(final RenderLivingEvent.Pre<?, ?> event) {
             // cancel rendering when helm of darkness is equipped
-            if (GreekFantasy.CONFIG.helmHidesArmor() && event.getEntity().getItemBySlot(EquipmentSlot.HEAD).is(GFRegistry.ItemReg.HELM_OF_DARKNESS.get())) {
+            if (GreekFantasy.CONFIG.helmHidesArmor() && event.getEntity().getItemBySlot(EquipmentSlot.HEAD)
+                    .is(GFRegistry.ItemReg.HELM_OF_DARKNESS.get())) {
                 event.setCanceled(true);
                 return;
             }
             // render pig when curse of circe is applied
-            if (GreekFantasy.CONFIG.isCurseOfCirceEnabled() && event.getEntity().hasEffect(GFRegistry.MobEffectReg.CURSE_OF_CIRCE.get())) {
+            if (GreekFantasy.CONFIG.isCurseOfCirceEnabled()
+                    && event.getEntity().hasEffect(GFRegistry.MobEffectReg.CURSE_OF_CIRCE.get())) {
                 // lazy-load pig renderer
                 if (null == pigRenderer) {
                     Minecraft mc = Minecraft.getInstance();
-                    EntityRendererProvider.Context context = new EntityRendererProvider.Context(mc.getEntityRenderDispatcher(),
-                            mc.getItemRenderer(), mc.getBlockRenderer(), mc.gameRenderer.itemInHandRenderer, mc.getResourceManager(), mc.getEntityModels(), mc.font);
+                    EntityRendererProvider.Context context = new EntityRendererProvider.Context(
+                            mc.getEntityRenderDispatcher(),
+                            mc.getItemRenderer(), mc.getBlockRenderer(), mc.gameRenderer.itemInHandRenderer,
+                            mc.getResourceManager(), mc.getEntityModels(), mc.font);
                     pigRenderer = new FakePigRenderer<>(context);
                 }
                 // render pig
@@ -192,10 +201,11 @@ public final class GFClientEvents {
         @SubscribeEvent(priority = EventPriority.HIGH)
         public static void onRenderHand(final RenderHandEvent event) {
             final Minecraft mc = Minecraft.getInstance();
-            if(null == mc.player) {
+            if (null == mc.player) {
                 return;
             }
-            if (GreekFantasy.CONFIG.helmHidesArmor() && mc.player.getItemBySlot(EquipmentSlot.HEAD).is(GFRegistry.ItemReg.HELM_OF_DARKNESS.get())) {
+            if (GreekFantasy.CONFIG.helmHidesArmor()
+                    && mc.player.getItemBySlot(EquipmentSlot.HEAD).is(GFRegistry.ItemReg.HELM_OF_DARKNESS.get())) {
                 event.setCanceled(true);
                 return;
             }
@@ -215,7 +225,7 @@ public final class GFClientEvents {
         public static void onClientTick(final TickEvent.ClientTickEvent event) {
             if (event.phase == TickEvent.Phase.END) {
                 final Minecraft mc = Minecraft.getInstance();
-                if (mc.player != null && mc.player.isRidingJumpable() && mc.player.getVehicle() instanceof Pegasus pegasus) {
+                if (mc.player != null && mc.player.isPassenger() && mc.player.getVehicle() instanceof Pegasus pegasus) {
                     mc.player.jumpRidingTicks = -10;
                     if (mc.player.input.jumping && !wasJumping) {
                         // if starting to jump, set flag
@@ -230,7 +240,8 @@ public final class GFClientEvents {
         }
 
         /**
-         * This method enables or disabled autojump based on the level of Overstep enchantment
+         * This method enables or disabled autojump based on the level of Overstep
+         * enchantment
          * on the player feet item.
          *
          * @param event the player tick event (only handles TickEvent.Phase.START)
@@ -243,7 +254,8 @@ public final class GFClientEvents {
                 final Minecraft mc = Minecraft.getInstance();
                 ItemStack feet = player.getItemBySlot(EquipmentSlot.FEET);
                 // check if the player is wearing an item with overstep enchantment in feet slot
-                final boolean hasOverstep = !feet.isEmpty() && feet.isDamageableItem() && feet.getMaxDamage() - feet.getDamageValue() > WingedSandalsItem.BROKEN
+                final boolean hasOverstep = !feet.isEmpty() && feet.isDamageableItem()
+                        && feet.getMaxDamage() - feet.getDamageValue() > WingedSandalsItem.BROKEN
                         && feet.getEnchantmentLevel(GFRegistry.EnchantmentReg.OVERSTEP.get()) > 0;
                 // if the player has overstep and is not sneaking, disable autojump
                 if (hasOverstep && !player.isCrouching() && player.isAutoJumpEnabled()) {
@@ -269,15 +281,19 @@ public final class GFClientEvents {
             // add layer renders to default model
             if (event.getSkin("default") instanceof PlayerRenderer playerRenderer) {
                 playerRenderer.addLayer(new NemeanLionHideLayer<>(playerRenderer,
-                        new NemeanArmorModel<>(event.getEntityModels().bakeLayer(NemeanArmorModel.NEMEAN_ARMOR_MODEL_RESOURCE)),
-                        new NemeanArmorModel<>(event.getEntityModels().bakeLayer(NemeanArmorModel.NEMEAN_ARMOR_MODEL_RESOURCE))));
+                        new NemeanArmorModel<>(
+                                event.getEntityModels().bakeLayer(NemeanArmorModel.NEMEAN_ARMOR_MODEL_RESOURCE)),
+                        new NemeanArmorModel<>(
+                                event.getEntityModels().bakeLayer(NemeanArmorModel.NEMEAN_ARMOR_MODEL_RESOURCE))));
                 playerRenderer.addLayer(new PlayerSoulFireLayer<>(playerRenderer));
             }
             // add layer renders to slim model
             if (event.getSkin("slim") instanceof PlayerRenderer playerRenderer) {
                 playerRenderer.addLayer(new NemeanLionHideLayer<>(playerRenderer,
-                        new NemeanArmorModel<>(event.getEntityModels().bakeLayer(NemeanArmorModel.NEMEAN_ARMOR_MODEL_RESOURCE)),
-                        new NemeanArmorModel<>(event.getEntityModels().bakeLayer(NemeanArmorModel.NEMEAN_ARMOR_MODEL_RESOURCE))));
+                        new NemeanArmorModel<>(
+                                event.getEntityModels().bakeLayer(NemeanArmorModel.NEMEAN_ARMOR_MODEL_RESOURCE)),
+                        new NemeanArmorModel<>(
+                                event.getEntityModels().bakeLayer(NemeanArmorModel.NEMEAN_ARMOR_MODEL_RESOURCE))));
                 playerRenderer.addLayer(new PlayerSoulFireLayer<>(playerRenderer));
             }
         }
@@ -286,8 +302,10 @@ public final class GFClientEvents {
         public static void registerEntityLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
             // register layer definitions
             // armor
-            event.registerLayerDefinition(HellenicArmorModel.HELLENIC_ARMOR_MODEL_RESOURCE, HellenicArmorModel::createBodyLayer);
-            event.registerLayerDefinition(WingedSandalsModel.WINGED_SANDALS_MODEL_RESOURCE, WingedSandalsModel::createBodyLayer);
+            event.registerLayerDefinition(HellenicArmorModel.HELLENIC_ARMOR_MODEL_RESOURCE,
+                    HellenicArmorModel::createBodyLayer);
+            event.registerLayerDefinition(WingedSandalsModel.WINGED_SANDALS_MODEL_RESOURCE,
+                    WingedSandalsModel::createBodyLayer);
             // creature
             event.registerLayerDefinition(AraModel.ARA_MODEL_RESOURCE, AraModel::createBodyLayer);
             event.registerLayerDefinition(ArachneModel.ARACHNE_MODEL_RESOURCE, ArachneModel::createBodyLayer);
@@ -305,8 +323,10 @@ public final class GFClientEvents {
             event.registerLayerDefinition(ElpisModel.ELPIS_MODEL_RESOURCE, ElpisModel::createBodyLayer);
             event.registerLayerDefinition(EmpusaModel.EMPUSA_MODEL_RESOURCE, EmpusaModel::createBodyLayer);
             event.registerLayerDefinition(FuryModel.FURY_MODEL_RESOURCE, FuryModel::createBodyLayer);
-            event.registerLayerDefinition(GeryonModel.GERYON_MODEL_RESOURCE, () -> GeryonModel.createBodyLayer(CubeDeformation.NONE));
-            event.registerLayerDefinition(GeryonModel.GERYON_ARMOR_MODEL_RESOURCE, () -> GeryonModel.createBodyLayer(new CubeDeformation(0.25F)));
+            event.registerLayerDefinition(GeryonModel.GERYON_MODEL_RESOURCE,
+                    () -> GeryonModel.createBodyLayer(CubeDeformation.NONE));
+            event.registerLayerDefinition(GeryonModel.GERYON_ARMOR_MODEL_RESOURCE,
+                    () -> GeryonModel.createBodyLayer(new CubeDeformation(0.25F)));
             event.registerLayerDefinition(GiganteModel.GIGANTE_MODEL_RESOURCE, GiganteModel::createBodyLayer);
             event.registerLayerDefinition(GoldenRamModel.RAM_MODEL_RESOURCE, GoldenRamModel::createBodyLayer);
             event.registerLayerDefinition(GorgonModel.GORGON_MODEL_RESOURCE, GorgonModel::createBodyLayer);
@@ -316,23 +336,28 @@ public final class GFClientEvents {
             event.registerLayerDefinition(HydraHeadModel.HYDRA_HEAD_MODEL_RESOURCE, HydraHeadModel::createBodyLayer);
             event.registerLayerDefinition(MakhaiModel.MAKHAI_MODEL_RESOURCE, MakhaiModel::createBodyLayer);
             event.registerLayerDefinition(MinotaurModel.MINOTAUR_MODEL_RESOURCE, MinotaurModel::createBodyLayer);
-            event.registerLayerDefinition(NemeanArmorModel.NEMEAN_ARMOR_MODEL_RESOURCE, NemeanArmorModel::createBodyLayer);
+            event.registerLayerDefinition(NemeanArmorModel.NEMEAN_ARMOR_MODEL_RESOURCE,
+                    NemeanArmorModel::createBodyLayer);
             event.registerLayerDefinition(NemeanLionModel.NEMEAN_LION_MODEL_RESOURCE, NemeanLionModel::createBodyLayer);
             event.registerLayerDefinition(NymphModel.NYMPH_LAYER_LOCATION, NymphModel::createBodyLayer);
             event.registerLayerDefinition(OrthusModel.ORTHUS_MODEL_RESOURCE, OrthusModel::createBodyLayer);
             event.registerLayerDefinition(PalladiumModel.PALLADIUM_MODEL_RESOURCE, PalladiumModel::createBodyLayer);
             event.registerLayerDefinition(PegasusModel.PEGASUS_MODEL_RESOURCE, PegasusModel::createBodyLayer);
             event.registerLayerDefinition(PythonModel.PYTHON_MODEL_RESOURCE, PythonModel::createBodyLayer);
-            event.registerLayerDefinition(SatyrModel.SATYR_MODEL_RESOURCE, () -> SatyrModel.createBodyLayer(CubeDeformation.NONE));
-            event.registerLayerDefinition(SatyrModel.SATYR_INNER_ARMOR_MODEL_RESOURCE, () -> SatyrModel.createBodyLayer(new CubeDeformation(0.25F)));
+            event.registerLayerDefinition(SatyrModel.SATYR_MODEL_RESOURCE,
+                    () -> SatyrModel.createBodyLayer(CubeDeformation.NONE));
+            event.registerLayerDefinition(SatyrModel.SATYR_INNER_ARMOR_MODEL_RESOURCE,
+                    () -> SatyrModel.createBodyLayer(new CubeDeformation(0.25F)));
             event.registerLayerDefinition(ScyllaModel.SCYLLA_MODEL_RESOURCE, ScyllaModel::createBodyLayer);
             event.registerLayerDefinition(ShadeModel.SHADE_MODEL_RESOURCE, ShadeModel::createBodyLayer);
             event.registerLayerDefinition(SirenModel.SIREN_MODEL_RESOURCE, SirenModel::createBodyLayer);
-            event.registerLayerDefinition(StymphalianModel.STYMPHALIAN_MODEL_RESOURCE, StymphalianModel::createBodyLayer);
+            event.registerLayerDefinition(StymphalianModel.STYMPHALIAN_MODEL_RESOURCE,
+                    StymphalianModel::createBodyLayer);
             event.registerLayerDefinition(TritonModel.TRITON_MODEL_RESOURCE, TritonModel::createBodyLayer);
             event.registerLayerDefinition(UnicornModel.UNICORN_MODEL_RESOURCE, UnicornModel::createBodyLayer);
             // other
-            event.registerLayerDefinition(CerberusHeadModel.CERBERUS_HEAD_MODEL_RESOURCE, CerberusHeadModel::createLayer);
+            event.registerLayerDefinition(CerberusHeadModel.CERBERUS_HEAD_MODEL_RESOURCE,
+                    CerberusHeadModel::createLayer);
             event.registerLayerDefinition(GiganteHeadModel.GIGANTE_HEAD_MODEL_RESOURCE, GiganteHeadModel::createLayer);
             event.registerLayerDefinition(OrthusHeadModel.ORTHUS_HEAD_MODEL_RESOURCE, OrthusHeadModel::createLayer);
             event.registerLayerDefinition(SpearModel.SPEAR_MODEL_RESOURCE, TridentModel::createLayer);
@@ -392,12 +417,14 @@ public final class GFClientEvents {
             // other
             event.registerEntityRenderer(GFRegistry.EntityReg.BRONZE_FEATHER.get(), ThrownItemRenderer::new);
             event.registerEntityRenderer(GFRegistry.EntityReg.CURSE.get(), SpellRenderer.CurseRenderer::new);
-            event.registerEntityRenderer(GFRegistry.EntityReg.CURSE_OF_CIRCE.get(), SpellRenderer.CurseOfCirceRenderer::new);
+            event.registerEntityRenderer(GFRegistry.EntityReg.CURSE_OF_CIRCE.get(),
+                    SpellRenderer.CurseOfCirceRenderer::new);
             event.registerEntityRenderer(GFRegistry.EntityReg.DISCUS.get(), ThrownItemRenderer::new);
             event.registerEntityRenderer(GFRegistry.EntityReg.DRAGON_TOOTH.get(), ThrownItemRenderer::new);
             event.registerEntityRenderer(GFRegistry.EntityReg.DRAGON_TOOTH_HOOK.get(), DragonToothHookRenderer::new);
             event.registerEntityRenderer(GFRegistry.EntityReg.GREEK_FIRE.get(), ThrownItemRenderer::new);
-            event.registerEntityRenderer(GFRegistry.EntityReg.HEALING_SPELL.get(), SpellRenderer.HealingSpellRenderer::new);
+            event.registerEntityRenderer(GFRegistry.EntityReg.HEALING_SPELL.get(),
+                    SpellRenderer.HealingSpellRenderer::new);
             event.registerEntityRenderer(GFRegistry.EntityReg.PALLADIUM.get(), PalladiumRenderer::new);
             event.registerEntityRenderer(GFRegistry.EntityReg.POISON_SPIT.get(), SpellRenderer.PoisonSpitRenderer::new);
             event.registerEntityRenderer(GFRegistry.EntityReg.SPEAR.get(), SpearRenderer::new);
@@ -405,9 +432,12 @@ public final class GFClientEvents {
             event.registerEntityRenderer(GFRegistry.EntityReg.WATER_SPELL.get(), SpellRenderer.WaterSpellRenderer::new);
             event.registerEntityRenderer(GFRegistry.EntityReg.WEB_BALL.get(), ThrownItemRenderer::new);
             // register block entities
-            event.registerBlockEntityRenderer(GFRegistry.BlockEntityReg.CERBERUS_HEAD.get(), CerberusHeadBlockEntityRenderer::new);
-            event.registerBlockEntityRenderer(GFRegistry.BlockEntityReg.GIGANTE_HEAD.get(), GiganteHeadBlockEntityRenderer::new);
-            event.registerBlockEntityRenderer(GFRegistry.BlockEntityReg.ORTHUS_HEAD.get(), OrthusHeadBlockEntityRenderer::new);
+            event.registerBlockEntityRenderer(GFRegistry.BlockEntityReg.CERBERUS_HEAD.get(),
+                    CerberusHeadBlockEntityRenderer::new);
+            event.registerBlockEntityRenderer(GFRegistry.BlockEntityReg.GIGANTE_HEAD.get(),
+                    GiganteHeadBlockEntityRenderer::new);
+            event.registerBlockEntityRenderer(GFRegistry.BlockEntityReg.ORTHUS_HEAD.get(),
+                    OrthusHeadBlockEntityRenderer::new);
             event.registerBlockEntityRenderer(GFRegistry.BlockEntityReg.VASE.get(), VaseBlockEntityRenderer::new);
         }
 
@@ -420,9 +450,13 @@ public final class GFClientEvents {
         @SubscribeEvent
         public static void registerBlockColors(final RegisterColorHandlersEvent.Block event) {
             event.register((BlockState stateIn, BlockAndTintGetter level, BlockPos pos, int tintIndex) -> 0xD8E3D0,
-                    RegistryObject.create(new ResourceLocation(GreekFantasy.MODID, "olive_leaves"), ForgeRegistries.BLOCKS).get());
+                    RegistryObject
+                            .create(new ResourceLocation(GreekFantasy.MODID, "olive_leaves"), ForgeRegistries.BLOCKS)
+                            .get());
             event.register((BlockState stateIn, BlockAndTintGetter level, BlockPos pos, int tintIndex) -> 0x80f66b,
-                    RegistryObject.create(new ResourceLocation(GreekFantasy.MODID, "golden_leaves"), ForgeRegistries.BLOCKS).get());
+                    RegistryObject
+                            .create(new ResourceLocation(GreekFantasy.MODID, "golden_leaves"), ForgeRegistries.BLOCKS)
+                            .get());
         }
 
         /**
@@ -434,14 +468,18 @@ public final class GFClientEvents {
         @SubscribeEvent
         public static void registerItemColors(final RegisterColorHandlersEvent.Item event) {
             event.register((ItemStack item, int tintIndex) -> 0xD8E3D0,
-                    RegistryObject.create(new ResourceLocation(GreekFantasy.MODID, "olive_leaves"), ForgeRegistries.ITEMS).get());
+                    RegistryObject
+                            .create(new ResourceLocation(GreekFantasy.MODID, "olive_leaves"), ForgeRegistries.ITEMS)
+                            .get());
             event.register((ItemStack item, int tintIndex) -> 0x80f66b,
-                    RegistryObject.create(new ResourceLocation(GreekFantasy.MODID, "golden_leaves"), ForgeRegistries.ITEMS).get());
+                    RegistryObject
+                            .create(new ResourceLocation(GreekFantasy.MODID, "golden_leaves"), ForgeRegistries.ITEMS)
+                            .get());
         }
 
         @SubscribeEvent
         public static void registerParticleProviders(final RegisterParticleProvidersEvent event) {
-            event.register(GFRegistry.ParticleReg.GORGON.get(), new GorgonParticle.Provider());
+            event.registerSpecial(GFRegistry.ParticleReg.GORGON.get(), new GorgonParticle.Provider());
         }
 
         private static void registerModelProperties() {
@@ -474,18 +512,24 @@ public final class GFClientEvents {
 
         private static void registerUsingProperties(final Item usingItem, final String propertyName) {
             ItemProperties.register(usingItem, new ResourceLocation(propertyName),
-                    (item, world, entity, tintIndex) -> (entity != null && entity.isUsingItem() && entity.getUseItem() == item) ? 1.0F : 0.0F);
+                    (item, world, entity,
+                            tintIndex) -> (entity != null && entity.isUsingItem() && entity.getUseItem() == item) ? 1.0F
+                                    : 0.0F);
         }
 
         private static void registerBowProperties(final Item bow) {
             ItemProperties.register(bow, new ResourceLocation("pull"),
                     (item, world, entity, tintIndex) -> {
-                        if (entity == null) return 0.0F;
-                        if (entity.getUseItem() != item) return 0.0F;
+                        if (entity == null)
+                            return 0.0F;
+                        if (entity.getUseItem() != item)
+                            return 0.0F;
                         return (item.getUseDuration() - entity.getUseItemRemainingTicks()) / 20.0F;
                     });
             ItemProperties.register(bow, new ResourceLocation("pulling"),
-                    (item, world, entity, tintIndex) -> (entity != null && entity.isUsingItem() && entity.getUseItem() == item) ? 1.0F : 0.0F);
+                    (item, world, entity,
+                            tintIndex) -> (entity != null && entity.isUsingItem() && entity.getUseItem() == item) ? 1.0F
+                                    : 0.0F);
         }
 
         private static void registerFishingRodProperties(final Item rod) {
@@ -499,14 +543,18 @@ public final class GFClientEvents {
                         isOffhand = false;
                     }
 
-                    return (isMainhand || isOffhand) && entity instanceof Player && ((Player)entity).fishing != null ? 1.0F : 0.0F;
+                    return (isMainhand || isOffhand) && entity instanceof Player && ((Player) entity).fishing != null
+                            ? 1.0F
+                            : 0.0F;
                 }
             });
         }
 
         private static void registerSpearProperties(final Item spear) {
-            ItemProperties.register(spear, new ResourceLocation("throwing"), (item, world, entity, tintIndex) ->
-                    (entity != null && entity.isUsingItem() && entity.getUseItem() == item) ? 1.0F : 0.0F);
+            ItemProperties.register(spear, new ResourceLocation("throwing"),
+                    (item, world, entity,
+                            tintIndex) -> (entity != null && entity.isUsingItem() && entity.getUseItem() == item) ? 1.0F
+                                    : 0.0F);
         }
 
     }

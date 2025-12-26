@@ -1,5 +1,7 @@
 package greekfantasy.entity.boss;
+import net.minecraft.core.registries.Registries;
 
+import net.minecraft.tags.DamageTypeTags;
 import greekfantasy.GreekFantasy;
 import greekfantasy.entity.ai.CooldownMeleeAttackGoal;
 import greekfantasy.entity.ai.MoveToStructureGoal;
@@ -16,6 +18,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
@@ -154,7 +157,7 @@ public class NemeanLion extends Monster implements HasCustomCooldown {
         }
 
         // randomly change sitting position when not attacking or wanting to attack
-        if (!this.level.isClientSide()) {
+        if (!this.level().isClientSide()) {
             if (sitting && (this.isAggressive() || this.getTarget() != null || !getPassengers().isEmpty())) {
                 setSitting(false);
             } else if (random.nextFloat() < 0.0009F) {
@@ -167,8 +170,8 @@ public class NemeanLion extends Monster implements HasCustomCooldown {
             Player player = (Player) getPassengers().get(0);
             this.setRot(player.getYRot(), player.getXRot() * 0.5F);
             // strangling damage
-            if (this.hurtTime == 0 && !level.isClientSide()) {
-                this.hurt(DamageSource.playerAttack(player), 1.0F + random.nextFloat());
+            if (this.hurtTime == 0 && !level().isClientSide()) {
+                this.hurt(player.damageSources().playerAttack(player), 1.0F + random.nextFloat());
                 // remove regen
                 if (this.getEffect(MobEffects.REGENERATION) != null) {
                     this.removeEffect(MobEffects.REGENERATION);
@@ -192,11 +195,11 @@ public class NemeanLion extends Monster implements HasCustomCooldown {
     protected void actuallyHurt(final DamageSource source, final float amountIn) {
         float damageAmount = amountIn;
         // cap damage at 2.0 (1 heart)
-        if (!source.isBypassMagic() && !source.isMagic() && !source.isBypassArmor()) {
+        if (!source.is(DamageTypeTags.BYPASSES_EFFECTS) && !source.is(DamageTypes.MAGIC) && !source.is(DamageTypeTags.BYPASSES_ARMOR)) {
             damageAmount = Math.min(2.0F, amountIn);
         }
         // stop sitting when hurt
-        if (!this.level.isClientSide() && this.isSitting()) {
+        if (!this.level().isClientSide() && this.isSitting()) {
             this.setSitting(false);
         }
         super.actuallyHurt(source, damageAmount);
@@ -204,15 +207,15 @@ public class NemeanLion extends Monster implements HasCustomCooldown {
 
     @Override
     public boolean isInvulnerableTo(final DamageSource source) {
-        return source == DamageSource.IN_WALL || source == DamageSource.WITHER
-                || source == DamageSource.CACTUS || source == DamageSource.SWEET_BERRY_BUSH
-                || source.isProjectile() || super.isInvulnerableTo(source);
+        return source.is(DamageTypes.IN_WALL) || source.is(DamageTypes.WITHER)
+                || source.is(DamageTypes.CACTUS) || source.is(DamageTypes.SWEET_BERRY_BUSH)
+                || source.is(DamageTypeTags.IS_PROJECTILE) || super.isInvulnerableTo(source);
     }
 
     @Override
     protected void doPush(final Entity entityIn) {
         // stop sitting when collided with entity
-        if (entityIn instanceof LivingEntity && !this.level.isClientSide() && this.isSitting()) {
+        if (entityIn instanceof LivingEntity && !this.level().isClientSide() && this.isSitting()) {
             this.setSitting(false);
         }
         super.doPush(entityIn);
@@ -233,7 +236,7 @@ public class NemeanLion extends Monster implements HasCustomCooldown {
     @Override
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         if (!this.isVehicle() && !player.isSecondaryUseActive()) {
-            if (!this.level.isClientSide() && this.canAddPassenger(player)) {
+            if (!this.level().isClientSide() && this.canAddPassenger(player)) {
                 // mount the player to the entity
                 player.startRiding(this);
                 // reset sitting
@@ -241,7 +244,7 @@ public class NemeanLion extends Monster implements HasCustomCooldown {
                     setSitting(false);
                 }
             }
-            return InteractionResult.sidedSuccess(this.level.isClientSide);
+            return InteractionResult.sidedSuccess(this.level().isClientSide);
         }
 
         return InteractionResult.FAIL;
@@ -318,10 +321,10 @@ public class NemeanLion extends Monster implements HasCustomCooldown {
     public void setSitting(final boolean sitting) {
         if (sitting) {
             setNemeanState(SITTING);
-            this.level.broadcastEntityEvent(this, SITTING_START_EVENT);
+            this.level().broadcastEntityEvent(this, SITTING_START_EVENT);
         } else {
             setNemeanState(NONE);
-            this.level.broadcastEntityEvent(this, SITTING_END_EVENT);
+            this.level().broadcastEntityEvent(this, SITTING_END_EVENT);
         }
     }
 

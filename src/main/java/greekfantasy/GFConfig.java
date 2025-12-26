@@ -1,5 +1,7 @@
 package greekfantasy;
 
+import net.minecraft.core.registries.Registries;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import net.minecraft.resources.ResourceLocation;
@@ -83,7 +85,8 @@ public class GFConfig {
     public final ForgeConfigSpec.DoubleValue SHADE_SPAWN_CHANCE;
     public final ForgeConfigSpec.DoubleValue SATYR_SHAMAN_CHANCE;
     public final ForgeConfigSpec.DoubleValue SCYLLA_SPAWN_CHANCE;
-    private static final ResourceLocation SATYR_SONG_FALLBACK = new ResourceLocation(GreekFantasy.MODID, "greensleeves");
+    private static final ResourceLocation SATYR_SONG_FALLBACK = new ResourceLocation(GreekFantasy.MODID,
+            "greensleeves");
     private final ForgeConfigSpec.ConfigValue<? extends String> SATYR_SONG;
     private ResourceLocation satyrSong;
     public final ForgeConfigSpec.BooleanValue SHADE_IMMUNE_TO_NONOWNER;
@@ -229,7 +232,8 @@ public class GFConfig {
 
         builder.push("mobs");
         CIRCE_SPAWN_CHANCE = builder.defineInRange("circe_spawn_chance", 2.0F, 0.0F, 100.0F);
-        GIANT_BOAR_NON_NETHER = builder.comment("Whether a hoglin must be outside of the nether to be turned to a Giant Boar")
+        GIANT_BOAR_NON_NETHER = builder
+                .comment("Whether a hoglin must be outside of the nether to be turned to a Giant Boar")
                 .define("giant_boar_non_nether", true);
         ELPIS_SPAWN_CHANCE = builder
                 .comment("Percent chance that opening a mysterious box spawns an Elpis")
@@ -276,9 +280,10 @@ public class GFConfig {
         CURSE_OF_CIRCE_ENABLED = builder.define("curse_of_circe_enabled", true);
         CURSE_OF_CIRCE_DURATION = builder.defineInRange("curse_of_circe_duration", 900, 1, 24000);
         CURSE_OF_CIRCE_WHITELIST = builder.comment("Mobs that can be affected by the Curse of Circe.",
-                        "Accepts entity id or mod id with wildcard.",
-                        "Example: [\"minecraft:zombie\", \"othermod:" + WILDCARD + "\"]")
-                .defineList("curse_of_circe_whitelist", List.of(curseOfCirceWhitelistDefault), o -> o instanceof String);
+                "Accepts entity id or mod id with wildcard.",
+                "Example: [\"minecraft:zombie\", \"othermod:" + WILDCARD + "\"]")
+                .defineList("curse_of_circe_whitelist", List.of(curseOfCirceWhitelistDefault),
+                        o -> o instanceof String);
         MIRRORING_EFFECT_ENABLED = builder.define("mirroring_enabled", false);
         PETRIFIED_NERF = builder
                 .comment("When true, Petrified applies slowness instead of stunning")
@@ -291,7 +296,8 @@ public class GFConfig {
         builder.push("palladium");
         PALLADIUM_ENABLED = builder.comment("Whether the Palladium can prevent monster spawns")
                 .define("palladium_enabled", true);
-        PALLADIUM_CHUNK_RANGE = builder.comment("The radius (in chunks) of the area protected by Palladium blocks (0=same chunk only)")
+        PALLADIUM_CHUNK_RANGE = builder
+                .comment("The radius (in chunks) of the area protected by Palladium blocks (0=same chunk only)")
                 .defineInRange("palladium_chunk_range", 2, 0, 3);
         PALLADIUM_Y_RANGE = builder.comment("The vertical area (in blocks) protected by Palladium blocks")
                 .defineInRange("palladium_y_range", 128, 0, 255);
@@ -299,8 +305,8 @@ public class GFConfig {
 
         builder.push("mob_spawns");
         SPAWN_DIMENSION_WHITELIST = builder.comment("Dimensions in which mobs can spawn.",
-                        "Accepts dimension id or mod id with wildcard.",
-                        "Example: [\"minecraft:the_nether\", \"rftoolsdim:" + WILDCARD + "\"]")
+                "Accepts dimension id or mod id with wildcard.",
+                "Example: [\"minecraft:the_nether\", \"rftoolsdim:" + WILDCARD + "\"]")
                 .define("spawn_dimensions", Lists.newArrayList("minecraft:" + WILDCARD));
         IS_SPAWN_DIMENSION_WHITELIST = builder.comment("true if the above list is a whitelist, false for blacklist")
                 .define("is_whitelist", true);
@@ -308,8 +314,8 @@ public class GFConfig {
 
         builder.comment("Feature generation chances (higher number = more features)").push("features");
         FEATURE_DIMENSION_WHITELIST = builder.comment("Dimensions in which mobs can spawn.",
-                        "Accepts dimension id or mod id with wildcard.",
-                        "Example: [\"minecraft:the_nether\", \"rftoolsdim:" + WILDCARD + "\"]")
+                "Accepts dimension id or mod id with wildcard.",
+                "Example: [\"minecraft:the_nether\", \"rftoolsdim:" + WILDCARD + "\"]")
                 .define("spawn_dimensions", Lists.newArrayList("minecraft:" + WILDCARD));
         IS_FEATURE_DIMENSION_WHITELIST = builder.comment("true if the above list is a whitelist, false for blacklist")
                 .define("is_whitelist", true);
@@ -343,7 +349,7 @@ public class GFConfig {
         showPythonBossBar = SHOW_PYTHON_BOSS_BAR.get();
         showScyllaBossBar = SHOW_SCYLLA_BOSS_BAR.get();
         satyrSong = ResourceLocation.tryParse(SATYR_SONG.get());
-        if(null == satyrSong) {
+        if (null == satyrSong) {
             satyrSong = SATYR_SONG_FALLBACK;
         }
         // mob effects
@@ -484,8 +490,10 @@ public class GFConfig {
         return matchesDimension(spawnDimensionWhitelist, isSpawnDimensionWhitelist, level.dimension().location());
     }
 
-    private static boolean matchesDimension(final List<? extends String> list, final boolean isWhitelist, final ResourceLocation dimensionId) {
+    private static boolean matchesDimension(final List<? extends String> list, final boolean isWhitelist,
+            final ResourceLocation dimensionId) {
         // check dimension id or mod id
-        return isWhitelist == (list.contains(dimensionId.toString()) || list.contains(dimensionId.getNamespace() + ":" + WILDCARD));
+        return isWhitelist == (list.contains(dimensionId.toString())
+                || list.contains(dimensionId.getNamespace() + ":" + WILDCARD));
     }
 }

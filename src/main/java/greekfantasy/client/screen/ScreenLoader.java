@@ -11,7 +11,7 @@ public final class ScreenLoader {
 
     public static void openQuestScreen(final Player playerIn, final int itemSlot, final ItemStack itemstack) {
         // only load client-side, of course
-        if (!playerIn.level.isClientSide()) {
+        if (!playerIn.level().isClientSide()) {
             return;
         }
         // open the gui
@@ -20,7 +20,7 @@ public final class ScreenLoader {
 
     public static void openInstrumentScreen(final Player playerIn, final int itemSlot, final ItemStack itemstack) {
         // only load client-side, of course
-        if (!playerIn.level.isClientSide()) {
+        if (!playerIn.level().isClientSide()) {
             return;
         }
         // open the gui

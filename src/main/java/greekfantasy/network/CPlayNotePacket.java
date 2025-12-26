@@ -1,4 +1,5 @@
 package greekfantasy.network;
+import net.minecraft.core.registries.Registries;
 
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.FriendlyByteBuf;
@@ -80,7 +81,7 @@ public class CPlayNotePacket {
             context.enqueueWork(() -> {
                 // locate the server-side entity and play the sound at its location
                 ServerPlayer player = context.getSender();
-                ServerLevel level = player.getLevel();
+                ServerLevel level = player.serverLevel();
                 Entity entity = level.getEntity(message.entity);
                 if(null == entity) {
                     entity = player;

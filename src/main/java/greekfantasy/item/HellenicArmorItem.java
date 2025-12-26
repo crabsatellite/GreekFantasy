@@ -1,4 +1,5 @@
 package greekfantasy.item;
+import net.minecraft.core.registries.Registries;
 
 import greekfantasy.GreekFantasy;
 import net.minecraft.ChatFormatting;
@@ -25,6 +26,7 @@ import java.util.List;
 
 public class HellenicArmorItem extends ArmorItem {
 
+    private final EquipmentSlot slot;
     private static final String TEXTURE_1 = new ResourceLocation(GreekFantasy.MODID, "textures/models/armor/hellenic_layer_1.png").toString();
     private static final String TEXTURE_2 = new ResourceLocation(GreekFantasy.MODID, "textures/models/armor/hellenic_layer_2.png").toString();
     private static final String TEXTURE_3 = new ResourceLocation(GreekFantasy.MODID, "textures/models/armor/hellenic_layer_3.png").toString();
@@ -32,7 +34,18 @@ public class HellenicArmorItem extends ArmorItem {
     private static final TagKey<Item> ACHILLES_ITEM = ForgeRegistries.ITEMS.tags().createTagKey(new ResourceLocation(GreekFantasy.MODID, "achilles_heel"));
 
     public HellenicArmorItem(final ArmorMaterial armorMaterial, EquipmentSlot slot, Properties properties) {
-        super(armorMaterial, slot, properties);
+        super(armorMaterial, typeFromSlot(slot), properties);
+        this.slot = slot;
+    }
+
+    private static ArmorItem.Type typeFromSlot(EquipmentSlot slot) {
+        return switch (slot) {
+            case HEAD -> ArmorItem.Type.HELMET;
+            case CHEST -> ArmorItem.Type.CHESTPLATE;
+            case LEGS -> ArmorItem.Type.LEGGINGS;
+            case FEET -> ArmorItem.Type.BOOTS;
+            default -> throw new IllegalArgumentException("Invalid equipment slot: " + slot);
+        };
     }
 
     /**

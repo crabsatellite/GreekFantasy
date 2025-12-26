@@ -1,5 +1,8 @@
 package greekfantasy.worldgen;
 
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.level.material.Fluids;
+
 import com.mojang.serialization.Codec;
 import greekfantasy.GFRegistry;
 import greekfantasy.entity.monster.Harpy;
@@ -15,9 +18,6 @@ import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.TreeConfiguration;
 import net.minecraft.world.level.levelgen.feature.stateproviders.BlockStateProvider;
-import net.minecraft.world.level.material.Material;
-
-import java.util.Random;
 
 public class HarpyNestFeature extends Feature<TreeConfiguration> {
 
@@ -55,8 +55,10 @@ public class HarpyNestFeature extends Feature<TreeConfiguration> {
         // prepare to place branch
         pos.setWithOffset(context.origin(), 0, dHeight, 0);
         // place branch
-        level.setBlock(rot(pos.move(Direction.UP, 4), 0, 1, rotation), config.trunkProvider.getState(rand, pos), Block.UPDATE_CLIENTS);
-        level.setBlock(rot(pos.move(Direction.UP, 1), 0, 1, rotation), config.trunkProvider.getState(rand, pos), Block.UPDATE_CLIENTS);
+        level.setBlock(rot(pos.move(Direction.UP, 4), 0, 1, rotation), config.trunkProvider.getState(rand, pos),
+                Block.UPDATE_CLIENTS);
+        level.setBlock(rot(pos.move(Direction.UP, 1), 0, 1, rotation), config.trunkProvider.getState(rand, pos),
+                Block.UPDATE_CLIENTS);
         level.setBlock(rot(pos, 0, 1, rotation), config.trunkProvider.getState(rand, pos), Block.UPDATE_CLIENTS);
         // prepare to place canopy
         pos.setWithOffset(context.origin(), 0, 3 + dHeight, 0);
@@ -73,7 +75,7 @@ public class HarpyNestFeature extends Feature<TreeConfiguration> {
         generateLeavesAround(level, rand, pos.move(Direction.UP), config.foliageProvider, 2);
         generateLeavesAround(level, rand, pos.move(Direction.UP), config.foliageProvider, 2);
         generateLeavesAround(level, rand, pos.move(Direction.UP), config.foliageProvider, 1);
-        if(rand.nextBoolean()) {
+        if (rand.nextBoolean()) {
             level.setBlock(pos.move(Direction.UP), config.foliageProvider.getState(rand, pos), Block.UPDATE_CLIENTS);
         }
         // nest
@@ -103,17 +105,21 @@ public class HarpyNestFeature extends Feature<TreeConfiguration> {
         // -z branch
         pos.setWithOffset(context.origin(), 0, 4 + dHeight, 0);
         level.setBlock(rot(pos, 0, -1, rotation), config.trunkProvider.getState(rand, pos), Block.UPDATE_CLIENTS);
-        level.setBlock(rot(pos.move(Direction.UP), 0, -1, rotation), config.trunkProvider.getState(rand, pos), Block.UPDATE_CLIENTS);
+        level.setBlock(rot(pos.move(Direction.UP), 0, -1, rotation), config.trunkProvider.getState(rand, pos),
+                Block.UPDATE_CLIENTS);
         // +z branch
         pos.setWithOffset(context.origin(), 0, 4 + dHeight, 0);
         level.setBlock(rot(pos, 0, 1, rotation), config.trunkProvider.getState(rand, pos), Block.UPDATE_CLIENTS);
-        level.setBlock(rot(pos.move(Direction.UP), 0, 1, rotation), config.trunkProvider.getState(rand, pos), Block.UPDATE_CLIENTS);
+        level.setBlock(rot(pos.move(Direction.UP), 0, 1, rotation), config.trunkProvider.getState(rand, pos),
+                Block.UPDATE_CLIENTS);
         // -x branch
         pos.setWithOffset(context.origin(), 0, 4 + dHeight, 0);
         level.setBlock(rot(pos, -1, 0, rotation), config.trunkProvider.getState(rand, pos), Block.UPDATE_CLIENTS);
-        level.setBlock(rot(pos.move(Direction.UP), -1, 0, rotation), config.trunkProvider.getState(rand, pos), Block.UPDATE_CLIENTS);
+        level.setBlock(rot(pos.move(Direction.UP), -1, 0, rotation), config.trunkProvider.getState(rand, pos),
+                Block.UPDATE_CLIENTS);
         level.setBlock(rot(pos, 0, -1, rotation), config.trunkProvider.getState(rand, pos), Block.UPDATE_CLIENTS);
-        level.setBlock(rot(pos.move(Direction.UP), -1, 1, rotation), config.trunkProvider.getState(rand, pos), Block.UPDATE_CLIENTS);
+        level.setBlock(rot(pos.move(Direction.UP), -1, 1, rotation), config.trunkProvider.getState(rand, pos),
+                Block.UPDATE_CLIENTS);
         // +x branch
         pos.setWithOffset(context.origin(), 0, 5 + dHeight, 0);
         level.setBlock(rot(pos, 1, 0, rotation), config.trunkProvider.getState(rand, pos), Block.UPDATE_CLIENTS);
@@ -171,15 +177,16 @@ public class HarpyNestFeature extends Feature<TreeConfiguration> {
      * @return the mutable block pos
      */
     protected static BlockPos rot(final BlockPos.MutableBlockPos origin, final int x, final int z, final Rotation rot) {
-        return origin.move(new BlockPos(x, 0, z).rotate(rot));
+        return origin.move(BlockPos.containing(x, 0, z).rotate(rot));
     }
 
     protected static boolean isReplaceableAt(LevelAccessor level, BlockPos pos) {
         return level.isStateAtPosition(pos, state -> (state.isAir()
-                || state.getMaterial().isReplaceable() || state.getMaterial() == Material.LEAVES));
+                || state.canBeReplaced(Fluids.EMPTY) || state.is(BlockTags.LEAVES)));
     }
 
-    protected static void generateLeavesAround(LevelAccessor level, RandomSource rand, BlockPos pos, BlockStateProvider leaf, int radius) {
+    protected static void generateLeavesAround(LevelAccessor level, RandomSource rand, BlockPos pos,
+            BlockStateProvider leaf, int radius) {
         BlockPos.MutableBlockPos p = pos.mutable();
         for (int x = -radius; x <= radius; x++) {
             for (int z = -radius; z <= radius; z++) {

@@ -56,7 +56,7 @@ public class DragonToothHook extends FishingHook {
             // determine damage amount
             float damageAmount = 1.0F + (float) vec3.scale(0.25F).length();
             // hurt the hooked entity
-            hookedEntity.hurt(DamageSource.indirectMobAttack(this, owner).bypassArmor(), damageAmount);
+            hookedEntity.hurt(level().damageSources().indirectMagic(this, owner), damageAmount);
         }
     }
 

@@ -1,4 +1,5 @@
 package greekfantasy.entity;
+import net.minecraft.core.registries.Registries;
 
 import greekfantasy.GFRegistry;
 import greekfantasy.GreekFantasy;
@@ -28,6 +29,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -91,8 +93,8 @@ public class Cerastes extends TamableAnimal {
     public Cerastes(final EntityType<? extends Cerastes> type, final Level worldIn) {
         super(type, worldIn);
         this.hiddenSize = EntityDimensions.scalable(0.8F, 0.2F);
-        this.setPathfindingMalus(BlockPathTypes.DAMAGE_CACTUS, -0.5F);
-        this.setPathfindingMalus(BlockPathTypes.DANGER_CACTUS, -0.5F);
+        this.setPathfindingMalus(BlockPathTypes.DANGER_OTHER, -0.5F);
+        this.setPathfindingMalus(BlockPathTypes.DANGER_OTHER, -0.5F);
         this.setPathfindingMalus(BlockPathTypes.WATER, -1.0F);
     }
 
@@ -233,10 +235,10 @@ public class Cerastes extends TamableAnimal {
         this.setStanding(true);
         this.setOrderedToSit(false);
         this.setInSittingPose(false);
-        if (hurt && source.getDirectEntity() instanceof Curse && this.level instanceof ServerLevel) {
+        if (hurt && source.getDirectEntity() instanceof Curse && this.level() instanceof ServerLevel) {
             // cause explosion and summon hydra
-            level.explode(this, this.getX(), this.getY(), this.getZ(), 2.5F, Explosion.BlockInteraction.DESTROY);
-            Hydra.spawnHydra((ServerLevel) this.level, this);
+            level().explode(this, this.getX(), this.getY(), this.getZ(), 2.5F, Level.ExplosionInteraction.MOB);
+            Hydra.spawnHydra((ServerLevel) this.level(), this);
         }
         return hurt;
     }
@@ -245,7 +247,7 @@ public class Cerastes extends TamableAnimal {
     protected void doPush(final Entity entityIn) {
         if (entityIn instanceof LivingEntity) {
             // un-hide and stand up
-            if (!this.level.isClientSide() && random.nextInt(10) == 0) {
+            if (!this.level().isClientSide() && random.nextInt(10) == 0) {
                 this.setHiding(false);
                 this.setStanding(true);
             }
@@ -324,7 +326,7 @@ public class Cerastes extends TamableAnimal {
     @Override
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         ItemStack itemstack = player.getItemInHand(hand);
-        if (this.level.isClientSide()) {
+        if (this.level().isClientSide()) {
             boolean consume = this.isOwnedBy(player) || this.isTame() || isFood(itemstack) && !this.isTame();
             return consume ? InteractionResult.CONSUME : InteractionResult.PASS;
         } else {
@@ -360,9 +362,9 @@ public class Cerastes extends TamableAnimal {
                     this.navigation.stop();
                     this.setTarget(null);
                     this.setOrderedToSit(true);
-                    this.level.broadcastEntityEvent(this, (byte) 7);
+                    this.level().broadcastEntityEvent(this, (byte) 7);
                 } else {
-                    this.level.broadcastEntityEvent(this, (byte) 6);
+                    this.level().broadcastEntityEvent(this, (byte) 6);
                 }
 
                 return InteractionResult.SUCCESS;
@@ -379,8 +381,8 @@ public class Cerastes extends TamableAnimal {
         if (standing) {
             this.isHiding = false;
         }
-        if (!level.isClientSide()) {
-            this.level.broadcastEntityEvent(this, standing ? STANDING_START_EVENT : STANDING_END_EVENT);
+        if (!level().isClientSide()) {
+            this.level().broadcastEntityEvent(this, standing ? STANDING_START_EVENT : STANDING_END_EVENT);
         }
     }
 
@@ -401,7 +403,7 @@ public class Cerastes extends TamableAnimal {
         if (hiding) {
             this.isStanding = false;
         }
-        this.level.broadcastEntityEvent(this, hiding ? HIDING_START_EVENT : HIDING_END_EVENT);
+        this.level().broadcastEntityEvent(this, hiding ? HIDING_START_EVENT : HIDING_END_EVENT);
         this.refreshDimensions();
     }
 
@@ -451,7 +453,7 @@ public class Cerastes extends TamableAnimal {
 
         @Override
         protected boolean isValidTarget(LevelReader worldIn, BlockPos pos) {
-            if (!worldIn.getBlockState(pos).getMaterial().blocksMotion() && worldIn.getBlockState(pos.below()).is(BlockTags.SAND)) {
+            if (!worldIn.getBlockState(pos).blocksMotion() && worldIn.getBlockState(pos.below()).is(BlockTags.SAND)) {
                 Cerastes.this.isGoingToSand = true;
                 return true;
             }
@@ -479,8 +481,8 @@ public class Cerastes extends TamableAnimal {
             } else if (this.entity.getTarget() != null || !this.entity.getNavigation().isDone() || this.entity.isHiding()) {
                 return false;
             } else if (this.entity.getRandom().nextInt(10) == 0) {
-                BlockPos blockpos = (new BlockPos(this.entity.getX(), this.entity.getY() - 0.5D, this.entity.getZ()));
-                BlockState blockstate = this.entity.level.getBlockState(blockpos);
+                BlockPos blockpos = (BlockPos.containing(this.entity.getX(), this.entity.getY() - 0.5D, this.entity.getZ()));
+                BlockState blockstate = this.entity.level().getBlockState(blockpos);
                 return blockstate.is(BlockTags.SAND);
             }
             return false;

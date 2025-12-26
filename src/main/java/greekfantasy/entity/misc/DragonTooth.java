@@ -5,9 +5,9 @@ import greekfantasy.GreekFantasy;
 import greekfantasy.entity.Sparti;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -53,26 +53,29 @@ public class DragonTooth extends ThrowableItemProjectile {
     protected void onHitEntity(EntityHitResult raytrace) {
         super.onHitEntity(raytrace);
         final float damage = GreekFantasy.CONFIG.DRAGON_TOOTH_SPARTI_COUNT.get() > 0 ? 0.0F : 1.5F;
-        raytrace.getEntity().hurt(DamageSource.thrown(this, getOwner()), damage);
+        raytrace.getEntity().hurt(this.damageSources().thrown(this, getOwner()), damage);
     }
 
     @Override
     protected void onHit(HitResult raytrace) {
         super.onHit(raytrace);
-        if (!this.level.isClientSide() && this.isAlive()) {
+        if (!this.level().isClientSide() && this.isAlive()) {
             Entity thrower = getOwner();
             // spawn a configurable number of sparti
-            for (int i = 0, n = GreekFantasy.CONFIG.DRAGON_TOOTH_SPARTI_COUNT.get(), life = 20 * GreekFantasy.CONFIG.DRAGON_TOOTH_SPARTI_LIFESPAN.get(); i < n; i++) {
-                final Sparti sparti = GFRegistry.EntityReg.SPARTI.get().create(level);
+            for (int i = 0, n = GreekFantasy.CONFIG.DRAGON_TOOTH_SPARTI_COUNT.get(),
+                    life = 20 * GreekFantasy.CONFIG.DRAGON_TOOTH_SPARTI_LIFESPAN.get(); i < n; i++) {
+                final Sparti sparti = GFRegistry.EntityReg.SPARTI.get().create(level());
                 sparti.moveTo(raytrace.getLocation().x, raytrace.getLocation().y, raytrace.getLocation().z, 0, 0);
-                level.addFreshEntity(sparti);
+                level().addFreshEntity(sparti);
                 if (thrower instanceof Player player) {
                     sparti.yBodyRot = Mth.wrapDegrees(thrower.getYRot() + 180.0F);
                     sparti.tame(player);
                 }
                 sparti.setSpawning();
                 sparti.setLimitedLife(life);
-                sparti.finalizeSpawn((ServerLevelAccessor) level, level.getCurrentDifficultyAt(new BlockPos(raytrace.getLocation())), MobSpawnType.MOB_SUMMONED, null, null);
+                sparti.finalizeSpawn((ServerLevelAccessor) level(),
+                        level().getCurrentDifficultyAt(BlockPos.containing(raytrace.getLocation())),
+                        MobSpawnType.MOB_SUMMONED, null, null);
             }
             discard();
         }
@@ -91,14 +94,14 @@ public class DragonTooth extends ThrowableItemProjectile {
     @Override
     public Entity changeDimension(ServerLevel serverWorld, ITeleporter iTeleporter) {
         Entity entity = getOwner();
-        if (entity != null && entity.level.dimension() != serverWorld.dimension()) {
+        if (entity != null && entity.level().dimension() != serverWorld.dimension()) {
             setOwner(null);
         }
         return super.changeDimension(serverWorld, iTeleporter);
     }
 
     @Override
-    public Packet<?> getAddEntityPacket() {
+    public Packet<ClientGamePacketListener> getAddEntityPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
     }
 

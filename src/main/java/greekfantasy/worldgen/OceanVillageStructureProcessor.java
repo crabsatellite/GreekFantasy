@@ -48,16 +48,16 @@ public class OceanVillageStructureProcessor extends StructureProcessor {
     @Override
     public StructureTemplate.StructureBlockInfo process(LevelReader level, BlockPos rawPos, BlockPos pos, StructureTemplate.StructureBlockInfo rawBlockInfo, StructureTemplate.StructureBlockInfo blockInfo, StructurePlaceSettings placementSettings, @Nullable StructureTemplate template) {
         // determine if the block is coral
-        if (CORAL_LIST.containsKey(blockInfo.state.getBlock())) {
+        if (CORAL_LIST.containsKey(blockInfo.state().getBlock())) {
             final long seed = placementSettings.getBoundingBox().hashCode();
             RandomSource random = RandomSource.create(seed);
             random.nextInt();
             // determine random index
             int index = random.nextInt(coralListSize);
             // determine blockstate
-            Block mappedBlock = CORAL_LIST.get(blockInfo.state.getBlock()).get(index);
-            BlockState replaced = copyMatchingProperties(blockInfo.state, mappedBlock.defaultBlockState());
-            return new StructureTemplate.StructureBlockInfo(blockInfo.pos, replaced, blockInfo.nbt);
+            Block mappedBlock = CORAL_LIST.get(blockInfo.state().getBlock()).get(index);
+            BlockState replaced = copyMatchingProperties(blockInfo.state(), mappedBlock.defaultBlockState());
+            return new StructureTemplate.StructureBlockInfo(blockInfo.pos(), replaced, blockInfo.nbt());
         }
         return blockInfo;
     }

@@ -1,11 +1,11 @@
 package greekfantasy.client.screen.radial;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.client.gui.GuiGraphics;
 
 /**
- * Adapted from https://github.com/gigaherz/ToolBelt under the following license:
+ * Adapted from https://github.com/gigaherz/ToolBelt under the following
+ * license:
  * <p>
  * Copyright (c) 2015, David Quintana <gigaherz@gmail.com>
  * All rights reserved.
@@ -21,7 +21,8 @@ import net.minecraft.client.renderer.entity.ItemRenderer;
  * names of the contributors may be used to endorse or promote products
  * derived from this software without specific prior written permission.
  * <p>
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  * DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
@@ -39,24 +40,16 @@ public class DrawingContext {
     public final float y;
     public final float z;
     public final Font fontRenderer;
-    public final ItemRenderer itemRenderer;
-    public final PoseStack poseStack;
-    public final IDrawingHelper drawingHelper;
+    public final GuiGraphics guiGraphics;
 
-    public DrawingContext(PoseStack poseStack, int width, int height, float x, float y, float z, Font fontRenderer, ItemRenderer itemRenderer, IDrawingHelper drawingHelper) {
-        this.poseStack = poseStack;
+    public DrawingContext(GuiGraphics guiGraphics, int width, int height, float x, float y, float z,
+            Font fontRenderer) {
+        this.guiGraphics = guiGraphics;
         this.width = width;
         this.height = height;
         this.x = x;
         this.y = y;
         this.z = z;
         this.fontRenderer = fontRenderer;
-        this.itemRenderer = itemRenderer;
-        this.drawingHelper = drawingHelper;
-    }
-
-    @FunctionalInterface
-    public interface IDrawingHelper {
-        void renderTooltip(PoseStack poseStack, int mouseX, int mouseY);
     }
 }

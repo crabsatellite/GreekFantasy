@@ -1,4 +1,5 @@
 package greekfantasy.entity;
+import net.minecraft.core.registries.Registries;
 
 import com.google.common.collect.ImmutableMap;
 import greekfantasy.GFRegistry;

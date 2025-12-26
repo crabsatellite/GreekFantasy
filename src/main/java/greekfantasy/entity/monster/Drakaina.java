@@ -1,4 +1,5 @@
 package greekfantasy.entity.monster;
+import net.minecraft.core.registries.Registries;
 
 import greekfantasy.GreekFantasy;
 import greekfantasy.entity.util.GFMobType;
@@ -172,7 +173,7 @@ public class Drakaina extends Monster {
                 }
             }
             // light target on fire if burning
-            float f = this.level.getCurrentDifficultyAt(this.blockPosition()).getEffectiveDifficulty();
+            float f = this.level().getCurrentDifficultyAt(this.blockPosition()).getEffectiveDifficulty();
             if (this.getMainHandItem().isEmpty() && this.isOnFire() && this.random.nextFloat() < f * 0.3F) {
                 entity.setSecondsOnFire(2 * (int) f);
             }

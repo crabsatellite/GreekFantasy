@@ -22,19 +22,17 @@ public class SnakeskinArmorItem extends ArmorItem {
 
 
     public SnakeskinArmorItem(final ArmorMaterial armorMaterial, final EquipmentSlot slot, Properties builderIn) {
-        super(armorMaterial, slot, builderIn);
+        super(armorMaterial, typeFromSlot(slot), builderIn);
     }
 
-    @Override
-    public void fillItemCategory(CreativeModeTab group, NonNullList<ItemStack> items) {
-        // add the item to the group with enchantment already applied
-        if (this.allowedIn(group)) {
-            final ItemStack stack = new ItemStack(this);
-            if (GreekFantasy.CONFIG.isPoisoningEnabled()) {
-                stack.enchant(GFRegistry.EnchantmentReg.POISONING.get(), 1);
-            }
-            items.add(stack);
-        }
+    private static ArmorItem.Type typeFromSlot(EquipmentSlot slot) {
+        return switch (slot) {
+            case HEAD -> ArmorItem.Type.HELMET;
+            case CHEST -> ArmorItem.Type.CHESTPLATE;
+            case LEGS -> ArmorItem.Type.LEGGINGS;
+            case FEET -> ArmorItem.Type.BOOTS;
+            default -> throw new IllegalArgumentException("Invalid equipment slot: " + slot);
+        };
     }
 
     @Override

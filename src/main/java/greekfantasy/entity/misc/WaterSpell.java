@@ -45,7 +45,7 @@ public class WaterSpell extends MobEffectProjectile {
         // add slow swim to the list
         list.add(new MobEffectInstance(GFRegistry.MobEffectReg.SLOW_SWIM.get(), 180, 2));
         // add poison to the list depending on random chance and difficulty
-        if(random.nextInt(15) < 1 + level.getDifficulty().getId() * 4) {
+        if(random.nextInt(15) < 1 + level().getDifficulty().getId() * 4) {
             list.add(new MobEffectInstance(MobEffects.POISON, 50, 0));
         }
         return list;

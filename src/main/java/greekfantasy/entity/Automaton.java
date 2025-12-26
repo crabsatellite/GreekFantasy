@@ -1,4 +1,5 @@
 package greekfantasy.entity;
+import net.minecraft.core.registries.Registries;
 
 import greekfantasy.GFRegistry;
 import greekfantasy.entity.ai.CooldownMeleeAttackGoal;
@@ -24,6 +25,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -235,17 +237,17 @@ public class Automaton extends AbstractGolem implements RangedAttackMob, HasCust
         super.tick();
 
         // spawn particles
-        if (this.level.isClientSide() && this.getDeltaMovement().horizontalDistanceSqr() > (double) 2.5000003E-7F && this.random.nextInt(3) == 0) {
+        if (this.level().isClientSide() && this.getDeltaMovement().horizontalDistanceSqr() > (double) 2.5000003E-7F && this.random.nextInt(3) == 0) {
             int i = Mth.floor(this.getX());
             int j = Mth.floor(this.getY() - (double) 0.2F);
             int k = Mth.floor(this.getZ());
-            BlockPos pos = new BlockPos(i, j, k);
-            BlockState blockstate = this.level.getBlockState(pos);
-            if (!this.level.isEmptyBlock(pos)) {
+            BlockPos pos = BlockPos.containing(i, j, k);
+            BlockState blockstate = this.level().getBlockState(pos);
+            if (!this.level().isEmptyBlock(pos)) {
                 final BlockParticleOption data = new BlockParticleOption(ParticleTypes.BLOCK, blockstate).setPos(pos);
                 final double radius = this.getBbWidth() * 0.8F;
                 final double motion = 4.0D;
-                this.level.addParticle(data,
+                this.level().addParticle(data,
                         this.getX() + (this.random.nextDouble() - 0.5D) * radius * 2,
                         this.getY() + 0.1D,
                         this.getZ() + (this.random.nextDouble() - 0.5D) * radius * 2,
@@ -258,15 +260,15 @@ public class Automaton extends AbstractGolem implements RangedAttackMob, HasCust
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         ItemStack itemstack = player.getItemInHand(hand);
         if(this.getHealth() < this.getMaxHealth() && isHealItem(itemstack)) {
-            if(!this.level.isClientSide()) {
+            if(!this.level().isClientSide()) {
                 this.heal(this.getMaxHealth() * 0.5F);
                 if(!player.isCreative()) {
                     itemstack.shrink(1);
                 }
                 this.playSound(SoundEvents.IRON_GOLEM_REPAIR, 1.0F, 1.0F);
-                ((ServerLevel)this.level).sendParticles(ParticleTypes.INSTANT_EFFECT, this.getX(), this.getEyeY(), this.getZ(), 8, 0.5D, 0.5D, 0.5D, 0.5D);
+                ((ServerLevel)this.level()).sendParticles(ParticleTypes.INSTANT_EFFECT, this.getX(), this.getEyeY(), this.getZ(), 8, 0.5D, 0.5D, 0.5D, 0.5D);
             }
-            return InteractionResult.sidedSuccess(this.level.isClientSide());
+            return InteractionResult.sidedSuccess(this.level().isClientSide());
         }
         return super.mobInteract(player,hand);
     }
@@ -284,7 +286,7 @@ public class Automaton extends AbstractGolem implements RangedAttackMob, HasCust
             entityIn.hurtMarked = true;
             attackTimer = 1;
             this.playSound(SoundEvents.IRON_GOLEM_ATTACK, 1.0F, 0.6F + random.nextFloat() * 0.2F);
-            this.level.broadcastEntityEvent(this, ATTACK_EVENT);
+            this.level().broadcastEntityEvent(this, ATTACK_EVENT);
             return true;
         }
         return false;
@@ -315,8 +317,8 @@ public class Automaton extends AbstractGolem implements RangedAttackMob, HasCust
 
     @Override
     public boolean isInvulnerableTo(final DamageSource source) {
-        return isSpawning() || source == DamageSource.DROWN || source == DamageSource.IN_WALL
-                || source == DamageSource.WITHER || super.isInvulnerableTo(source);
+        return isSpawning() || source.is(DamageTypes.DROWN) || source.is(DamageTypes.IN_WALL)
+                || source.is(DamageTypes.WITHER) || super.isInvulnerableTo(source);
     }
 
     @Override
@@ -399,8 +401,8 @@ public class Automaton extends AbstractGolem implements RangedAttackMob, HasCust
     public void setSpawning(final boolean spawning) {
         spawnTime = spawning ? getMaxSpawnTime() : 0;
         setState(spawning ? SPAWNING : NONE);
-        if (spawning && !this.level.isClientSide()) {
-            this.level.broadcastEntityEvent(this, SPAWN_EVENT);
+        if (spawning && !this.level().isClientSide()) {
+            this.level().broadcastEntityEvent(this, SPAWN_EVENT);
         }
     }
 
@@ -449,7 +451,7 @@ public class Automaton extends AbstractGolem implements RangedAttackMob, HasCust
 
     @Override
     public void performRangedAttack(LivingEntity target, float distanceFactor) {
-        if (this.level.isClientSide() || !this.isShooting() || shootTime < (getMaxShootTime() / 4)) {
+        if (this.level().isClientSide() || !this.isShooting() || shootTime < (getMaxShootTime() / 4)) {
             return;
         }
         ItemStack itemstack = new ItemStack(Items.ARROW);
@@ -461,11 +463,11 @@ public class Automaton extends AbstractGolem implements RangedAttackMob, HasCust
         double dy = target.getY(0.67D) - arrow.getY();
         double dz = target.getZ() - arrow.getZ();
         double dis = Math.sqrt(dx * dx + dz * dz);
-        arrow.shoot(dx, dy + dis * (double) 0.2F, dz, 1.6F, (float) (14 - this.level.getDifficulty().getId() * 4));
-        arrow.setBaseDamage(1.0D + this.level.getDifficulty().getId() * 0.25D);
+        arrow.shoot(dx, dy + dis * (double) 0.2F, dz, 1.6F, (float) (14 - this.level().getDifficulty().getId() * 4));
+        arrow.setBaseDamage(1.0D + this.level().getDifficulty().getId() * 0.25D);
         arrow.setOwner(this);
         this.playSound(SoundEvents.ARROW_SHOOT, 1.0F, 1.0F / (this.getRandom().nextFloat() * 0.4F + 0.8F));
-        this.level.addFreshEntity(arrow);
+        this.level().addFreshEntity(arrow);
     }
 
     @Override
@@ -515,7 +517,7 @@ public class Automaton extends AbstractGolem implements RangedAttackMob, HasCust
         public void start() {
             super.start();
             Automaton.this.setShooting(true);
-            Automaton.this.level.broadcastEntityEvent(Automaton.this, SHOOT_EVENT);
+            Automaton.this.level().broadcastEntityEvent(Automaton.this, SHOOT_EVENT);
             Automaton.this.shootTime = 1;
         }
 

@@ -3,20 +3,20 @@ package greekfantasy.client.screen.radial;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.util.Mth;
 import org.apache.logging.log4j.util.TriConsumer;
 
 import java.util.List;
 
 /**
- * Adapted from https://github.com/gigaherz/ToolBelt under the following license:
+ * Adapted from https://github.com/gigaherz/ToolBelt under the following
+ * license:
  * <p>
  * Copyright (c) 2015, David Quintana <gigaherz@gmail.com>
  * All rights reserved.
@@ -32,7 +32,8 @@ import java.util.List;
  * names of the contributors may be used to endorse or promote products
  * derived from this software without specific prior written permission.
  * <p>
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  * DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
@@ -52,17 +53,15 @@ public final class RadialMenuHelper {
     public final int backgroundColorHover;
 
     private Screen screen;
-    private DrawingContext.IDrawingHelper drawingHelper;
     private List<RadialMenuItem> items;
     private float radiusIn;
     private float radiusOut;
     private float itemRadius;
 
     public RadialMenuHelper(final Screen screen, List<RadialMenuItem> items,
-                            final float radiusIn, final float radiusOut,
-                            final int backgroundColor, final int backgroundColorHover) {
+            final float radiusIn, final float radiusOut,
+            final int backgroundColor, final int backgroundColorHover) {
         this.screen = screen;
-        this.drawingHelper = (poseStack, mouseX, mouseY) -> {};
         this.items = items;
         this.radiusIn = radiusIn;
         this.radiusOut = radiusOut;
@@ -71,9 +70,8 @@ public final class RadialMenuHelper {
         this.backgroundColorHover = backgroundColorHover;
     }
 
-    public void drawBackground(PoseStack poseStack, float x, float y, float z) {
+    public void drawBackground(GuiGraphics guiGraphics, float x, float y, float z) {
         RenderSystem.enableBlend();
-        RenderSystem.disableTexture();
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
@@ -86,18 +84,16 @@ public final class RadialMenuHelper {
             drawPieArc(buffer, x, y, z, radiusIn, radiusOut, s, e, color);
         });
         tessellator.end();
-        RenderSystem.enableTexture();
         RenderSystem.disableBlend();
     }
 
-    public void drawItems(PoseStack poseStack, int x, int y, float z, int width, int height, Font font, ItemRenderer itemRenderer)
-    {
+    public void drawItems(GuiGraphics guiGraphics, int x, int y, float z, int width, int height, Font font) {
         iterateVisible((item, s, e) -> {
             float middle = (s + e) * 0.5f;
             float posX = x + itemRadius * (float) Math.cos(middle);
             float posY = y + itemRadius * (float) Math.sin(middle);
 
-            DrawingContext context = new DrawingContext(poseStack, width, height, posX, posY, z, font, itemRenderer, drawingHelper);
+            DrawingContext context = new DrawingContext(guiGraphics, width, height, posX, posY, z, font);
             item.draw(context);
         });
     }
@@ -113,7 +109,8 @@ public final class RadialMenuHelper {
         }
     }
 
-    private void drawPieArc(BufferBuilder buffer, float x, float y, float z, float radiusIn, float radiusOut, float startAngle, float endAngle, int color) {
+    private void drawPieArc(BufferBuilder buffer, float x, float y, float z, float radiusIn, float radiusOut,
+            float startAngle, float endAngle, int color) {
         float angle = endAngle - startAngle;
         int sections = Math.max(1, Mth.ceil(angle / PRECISION));
 

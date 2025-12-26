@@ -22,6 +22,7 @@ import net.minecraft.util.TimeUtil;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -162,16 +163,16 @@ public class Satyr extends PathfinderMob implements NeutralMob, HasHorseVariant 
     @Override
     public void aiStep() {
         super.aiStep();
-        if (this.level.isClientSide()) {
+        if (this.level().isClientSide()) {
             // play music
             if (isSummoning()) {
                 SongManager.playMusic(this, GFRegistry.ItemReg.PANFLUTE.get(), SUMMONING_SONG, summonTime, 0.92F, 0.34F);
             } else if (isDancing()) {
-                SongManager.playMusic(this, GFRegistry.ItemReg.PANFLUTE.get(), GreekFantasy.CONFIG.getSatyrSong(), level.getGameTime(), 0.84F, 0.28F);
+                SongManager.playMusic(this, GFRegistry.ItemReg.PANFLUTE.get(), GreekFantasy.CONFIG.getSatyrSong(), level().getGameTime(), 0.84F, 0.28F);
             }
         } else {
             // anger timer
-            this.updatePersistentAnger((ServerLevel) this.level, true);
+            this.updatePersistentAnger((ServerLevel) this.level(), true);
         }
 
         // dancing timer
@@ -212,7 +213,7 @@ public class Satyr extends PathfinderMob implements NeutralMob, HasHorseVariant 
             return true;
         }
         // immune to being in fires
-        return source == DamageSource.IN_FIRE;
+        return source.is(DamageTypes.IN_FIRE);
     }
 
     @Override
@@ -262,7 +263,7 @@ public class Satyr extends PathfinderMob implements NeutralMob, HasHorseVariant 
     @Override
     public void handleEntityEvent(byte id) {
         if (id == PLAY_SUMMON_SOUND) {
-            this.level.playLocalSound(this.getX(), this.getY(), this.getZ(), SoundEvents.WOLF_HOWL, this.getSoundSource(), 1.1F, 0.9F + this.getRandom().nextFloat() * 0.2F, false);
+            this.level().playLocalSound(this.getX(), this.getY(), this.getZ(), SoundEvents.WOLF_HOWL, this.getSoundSource(), 1.1F, 0.9F + this.getRandom().nextFloat() * 0.2F, false);
             this.summonTime = 1;
         } else {
             super.handleEntityEvent(id);
@@ -282,7 +283,7 @@ public class Satyr extends PathfinderMob implements NeutralMob, HasHorseVariant 
         super.readAdditionalSaveData(compound);
         this.setShaman(compound.getBoolean(KEY_SHAMAN));
         this.setVariant(Variant.byId(compound.getByte(KEY_VARIANT)));
-        this.readPersistentAngerSaveData(this.level, compound);
+        this.readPersistentAngerSaveData(this.level(), compound);
     }
 
     // NeutralMob methods
@@ -408,7 +409,7 @@ public class Satyr extends PathfinderMob implements NeutralMob, HasHorseVariant 
             return false;
         }
         // ensure the block is a campfire
-        final BlockState target = level.getBlockState(pos);
+        final BlockState target = level().getBlockState(pos);
         if (!IS_CAMPFIRE.test(target, true)) {
             return false;
         }
@@ -435,15 +436,15 @@ public class Satyr extends PathfinderMob implements NeutralMob, HasHorseVariant 
      * @return true if the position is blocked or there is no solid surface
      */
     protected boolean cannotStandAt(final BlockPos pos) {
-        BlockState state1 = level.getBlockState(pos);
-        BlockState state2 = level.getBlockState(pos.above());
+        BlockState state1 = level().getBlockState(pos);
+        BlockState state2 = level().getBlockState(pos.above());
         // check material and fluids at and above this position
-        if (state1.getMaterial().blocksMotion() || !state1.getFluidState().is(Fluids.EMPTY)
-                || state2.getMaterial().blocksMotion() || !state2.getFluidState().is(Fluids.EMPTY)) {
+        if (state1.blocksMotion() || !state1.getFluidState().is(Fluids.EMPTY)
+                || state2.blocksMotion() || !state2.getFluidState().is(Fluids.EMPTY)) {
             return true;
         }
         // check no solid surface below this position
-        if (!level.getBlockState(pos.below(1)).entityCanStandOn(level, pos.below(1), this)) {
+        if (!level().getBlockState(pos.below(1)).entityCanStandOn(level(), pos.below(1), this)) {
             return true;
         }
         // all conditions passed, entity can stand here
@@ -469,7 +470,7 @@ public class Satyr extends PathfinderMob implements NeutralMob, HasHorseVariant 
             // alert all nearby satyr shamans
             double range = Satyr.this.getAttributeValue(Attributes.FOLLOW_RANGE);
             final LivingEntity target = Satyr.this.getLastHurtByMob();
-            final List<Satyr> shamans = Satyr.this.level.getEntitiesOfClass(Satyr.class, Satyr.this.getBoundingBox().inflate(range), e -> e.isShaman());
+            final List<Satyr> shamans = Satyr.this.level().getEntitiesOfClass(Satyr.class, Satyr.this.getBoundingBox().inflate(range), e -> e.isShaman());
             for (final Satyr shaman : shamans) {
                 this.alertOther(shaman, target);
             }
@@ -500,7 +501,7 @@ public class Satyr extends PathfinderMob implements NeutralMob, HasHorseVariant 
         public void stop() {
             super.stop();
             Satyr.this.setSummoning(false);
-            Satyr.this.level.broadcastEntityEvent(Satyr.this, PLAY_SUMMON_SOUND);
+            Satyr.this.level().broadcastEntityEvent(Satyr.this, PLAY_SUMMON_SOUND);
         }
 
         @Override
@@ -607,7 +608,7 @@ public class Satyr extends PathfinderMob implements NeutralMob, HasHorseVariant 
                 // if we're close to the targetPos, update targetPos and path
                 if (isNearTarget(1.26D)) {
                     this.updateTarget();
-                    if (Satyr.this.isOnGround()) {
+                    if (Satyr.this.onGround()) {
                         Satyr.this.jumpFromGround();
                     }
                     Satyr.this.getNavigation().moveTo(targetPos.x, targetPos.y, targetPos.z, moveSpeed);
@@ -761,8 +762,8 @@ public class Satyr extends PathfinderMob implements NeutralMob, HasHorseVariant 
             BlockPos p;
             for (final Direction d : Direction.Plane.HORIZONTAL) {
                 p = pos.relative(d, 1);
-                if (IS_CAMPFIRE.test(level.getBlockState(p), false)
-                        && !Satyr.this.level.isRainingAt(p)) {
+                if (IS_CAMPFIRE.test(level().getBlockState(p), false)
+                        && !Satyr.this.level().isRainingAt(p)) {
                     this.lightingFireAt = p;
                     return true;
                 }
@@ -779,7 +780,7 @@ public class Satyr extends PathfinderMob implements NeutralMob, HasHorseVariant 
         public boolean canUse() {
             return Satyr.this.isIdleState()
                     && Satyr.this.getTarget() == null
-                    && Satyr.this.level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)
+                    && Satyr.this.level().getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)
                     && super.canUse();
         }
 
@@ -824,11 +825,11 @@ public class Satyr extends PathfinderMob implements NeutralMob, HasHorseVariant 
         }
 
         protected boolean lightCampfire(final BlockPos pos) {
-            if (net.minecraftforge.event.ForgeEventFactory.getMobGriefingEvent(Satyr.this.level, Satyr.this)) {
-                final BlockState state = Satyr.this.level.getBlockState(pos);
+            if (net.minecraftforge.event.ForgeEventFactory.getMobGriefingEvent(Satyr.this.level(), Satyr.this)) {
+                final BlockState state = Satyr.this.level().getBlockState(pos);
                 if (IS_CAMPFIRE.test(state, false)) {
                     Satyr.this.playSound(SoundEvents.FLINTANDSTEEL_USE, 1.0F, 1.0F);
-                    Satyr.this.level.setBlock(pos, state.setValue(CampfireBlock.LIT, Boolean.TRUE), 2);
+                    Satyr.this.level().setBlock(pos, state.setValue(CampfireBlock.LIT, Boolean.TRUE), 2);
                     Satyr.this.swing(InteractionHand.MAIN_HAND, true);
                     return true;
                 }

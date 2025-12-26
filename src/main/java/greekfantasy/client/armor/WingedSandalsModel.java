@@ -65,7 +65,7 @@ public class WingedSandalsModel extends HumanoidModel<LivingEntity> {
     public void setupWingsAnim(LivingEntity entity) {
         float ageInTicks = entity.tickCount + Minecraft.getInstance().getFrameTime();
         // animate wings
-        final float wingSpeed = entity.isOnGround() ? 0.64F : 1.18F;
+        final float wingSpeed = entity.onGround() ? 0.64F : 1.18F;
         final float wingSpan = 0.76854F;
         final float wingAngle = wingSpan - Mth.cos((ageInTicks + entity.getId()) * wingSpeed) * wingSpan * 0.65F;
         this.rightWing.yRot = wingAngle;

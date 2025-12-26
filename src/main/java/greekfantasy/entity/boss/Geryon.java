@@ -1,4 +1,5 @@
 package greekfantasy.entity.boss;
+import net.minecraft.core.registries.Registries;
 
 import greekfantasy.GFRegistry;
 import greekfantasy.GreekFantasy;
@@ -26,7 +27,9 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
@@ -171,7 +174,7 @@ public class Geryon extends Monster implements HasCustomCooldown {
         this.bossInfo.setProgress(this.getHealth() / this.getMaxHealth());
 
         // attack cooldown
-        if(!this.level.isClientSide()) {
+        if(!this.level().isClientSide()) {
             tickCustomCooldown();
         }
 
@@ -179,7 +182,7 @@ public class Geryon extends Monster implements HasCustomCooldown {
         if (isSpawning() && --spawnTime <= 0) {
             // update timer
             setSpawning(false);
-            if (!level.isClientSide()) {
+            if (!level().isClientSide()) {
                 destroyIntersectingBlocks(0);
             }
         }
@@ -209,7 +212,7 @@ public class Geryon extends Monster implements HasCustomCooldown {
     public void tick() {
         super.tick();
 
-        if (this.level.isClientSide()) {
+        if (this.level().isClientSide()) {
             // add motion particles
             if (this.getDeltaMovement().horizontalDistanceSqr() > (double) 2.5000003E-7F && this.random.nextInt(5) == 0) {
                 addBlockParticles(2);
@@ -287,7 +290,7 @@ public class Geryon extends Monster implements HasCustomCooldown {
 
     @Override
     public boolean isInvulnerableTo(final DamageSource source) {
-        return isSpawning() || source == DamageSource.IN_WALL || source == DamageSource.WITHER
+        return isSpawning() || source.is(DamageTypes.IN_WALL) || source.is(DamageTypes.WITHER)
                 || source.getDirectEntity() instanceof AbstractArrow || super.isInvulnerableTo(source);
     }
 
@@ -378,8 +381,8 @@ public class Geryon extends Monster implements HasCustomCooldown {
     public void setSpawning(final boolean spawning) {
         spawnTime = spawning ? MAX_SPAWN_TIME : 0;
         setGeryonState(spawning ? SPAWNING : NONE);
-        if (spawning && !this.level.isClientSide()) {
-            this.level.broadcastEntityEvent(this, START_SPAWN_EVENT);
+        if (spawning && !this.level().isClientSide()) {
+            this.level().broadcastEntityEvent(this, START_SPAWN_EVENT);
         }
     }
 
@@ -391,20 +394,20 @@ public class Geryon extends Monster implements HasCustomCooldown {
                 break;
             case SMASH_EVENT:
                 // spawn particles for all nearby entities
-                final List<Entity> targets = this.level.getEntities(Geryon.this, Geryon.this.getBoundingBox().inflate(SMASH_RANGE, SMASH_RANGE / 2, SMASH_RANGE));
+                final List<Entity> targets = this.level().getEntities(Geryon.this, Geryon.this.getBoundingBox().inflate(SMASH_RANGE, SMASH_RANGE / 2, SMASH_RANGE));
                 for (final Entity e : targets) {
                     addSmashParticlesAt(e);
                 }
                 // add sound and block particles here
-                level.playLocalSound(this.getX(), this.getY(), this.getZ(), SoundEvents.IRON_GOLEM_ATTACK, this.getSoundSource(), 2.0F, 0.4F, false);
+                level().playLocalSound(this.getX(), this.getY(), this.getZ(), SoundEvents.IRON_GOLEM_ATTACK, this.getSoundSource(), 2.0F, 0.4F, false);
                 addBlockParticles(45);
                 break;
             case SUMMON_EVENT:
                 for (int i = 0; i < 4; i++) {
-                    this.level.playLocalSound(this.getX(), this.getY(), this.getZ(), SoundEvents.NOTE_BLOCK_DIDGERIDOO, this.getSoundSource(), 2.0F, 0.2F, false);
+                    this.level().playLocalSound(this.getX(), this.getY(), this.getZ(), SoundEvents.NOTE_BLOCK_DIDGERIDOO.value(), this.getSoundSource(), 2.0F, 0.2F, false);
                 }
                 for (int i = 0; i < 2; i++) {
-                    this.level.playLocalSound(this.getX(), this.getY(), this.getZ(), SoundEvents.NOTE_BLOCK_DIDGERIDOO, this.getSoundSource(), 1.8F, 0.4F, false);
+                    this.level().playLocalSound(this.getX(), this.getY(), this.getZ(), SoundEvents.NOTE_BLOCK_DIDGERIDOO.value(), this.getSoundSource(), 1.8F, 0.4F, false);
                 }
                 break;
             default:
@@ -424,14 +427,14 @@ public class Geryon extends Monster implements HasCustomCooldown {
         int i = Mth.floor(this.getX());
         int j = Mth.floor(this.getY() - (double) 0.2F);
         int k = Mth.floor(this.getZ());
-        BlockPos pos = new BlockPos(i, j, k);
-        BlockState blockstate = this.level.getBlockState(pos);
+        BlockPos pos = BlockPos.containing(i, j, k);
+        BlockState blockstate = this.level().getBlockState(pos);
         if (!blockstate.isAir()) {
             final BlockParticleOption data = new BlockParticleOption(ParticleTypes.BLOCK, blockstate).setPos(pos);
             final double radius = this.getBbWidth();
             final double motion = 4.0D;
             for (int c = 0; c < count; c++) {
-                this.level.addParticle(data,
+                this.level().addParticle(data,
                         this.getX() + (this.random.nextDouble() - 0.5D) * radius * 2,
                         this.getY() + 0.1D,
                         this.getZ() + (this.random.nextDouble() - 0.5D) * radius * 2,
@@ -447,13 +450,13 @@ public class Geryon extends Monster implements HasCustomCooldown {
         final double motion = 0.08D;
         final double radius = e.getBbWidth();
         for (int i = 0; i < 25; i++) {
-            level.addParticle(ParticleTypes.CRIT,
-                    x + (level.random.nextDouble() - 0.5D) * radius,
+            level().addParticle(ParticleTypes.CRIT,
+                    x + (level().random.nextDouble() - 0.5D) * radius,
                     y,
-                    z + (level.random.nextDouble() - 0.5D) * radius,
-                    (level.random.nextDouble() - 0.5D) * motion,
+                    z + (level().random.nextDouble() - 0.5D) * radius,
+                    (level().random.nextDouble() - 0.5D) * motion,
                     0.5D,
-                    (level.random.nextDouble() - 0.5D) * motion);
+                    (level().random.nextDouble() - 0.5D) * motion);
         }
     }
 
@@ -489,9 +492,9 @@ public class Geryon extends Monster implements HasCustomCooldown {
      **/
     private void useSmashAttack(final Entity entity) {
         // if entitiy is touching the ground, knock it into the air and apply stun
-        if (entity.isOnGround() && !isExemptFromSmashAttack(entity)) {
+        if (entity.onGround() && !isExemptFromSmashAttack(entity)) {
             entity.push(0.0D, 0.65D, 0.0D);
-            entity.hurt(DamageSource.mobAttack(this), (float) this.getAttribute(Attributes.ATTACK_DAMAGE).getValue());
+            entity.hurt(this.damageSources().mobAttack(this), (float) this.getAttribute(Attributes.ATTACK_DAMAGE).getValue());
             // stun effect (for living entities)
             if (entity instanceof LivingEntity target) {
                 if (GreekFantasy.CONFIG.STUNNED_NERF.get()) {
@@ -510,15 +513,15 @@ public class Geryon extends Monster implements HasCustomCooldown {
      * @param offset the forward distance to offset the bounding box
      **/
     private void destroyIntersectingBlocks(final double offset) {
-        if (!level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)) {
+        if (!level().getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)) {
             return;
         }
         final Vec3 facing = Vec3.directionFromRotation(this.getRotationVector());
         final AABB box = this.getBoundingBox().move(facing.normalize().scale(offset));
         BlockPos.betweenClosedStream(box).forEach(p -> {
-            BlockState b = this.level.getBlockState(p);
-            if ((b.canOcclude() || b.getMaterial().blocksMotion()) && !b.is(BlockTags.WITHER_IMMUNE)) {
-                this.level.destroyBlock(p, true);
+            BlockState b = this.level().getBlockState(p);
+            if ((b.canOcclude() || b.blocksMotion()) && !b.is(BlockTags.WITHER_IMMUNE)) {
+                this.level().destroyBlock(p, true);
             }
         });
     }
@@ -610,9 +613,9 @@ public class Geryon extends Monster implements HasCustomCooldown {
             }
             if (Geryon.this.smashTime >= Geryon.MAX_SMASH_TIME) {
                 // notify client (spawns particles around entities)
-                Geryon.this.level.broadcastEntityEvent(Geryon.this, Geryon.SMASH_EVENT);
+                Geryon.this.level().broadcastEntityEvent(Geryon.this, Geryon.SMASH_EVENT);
                 // get a list of nearby entities and use smash attack on each one
-                Geryon.this.level.getEntities(Geryon.this, Geryon.this.getBoundingBox().inflate(range, range / 2, range))
+                Geryon.this.level().getEntities(Geryon.this, Geryon.this.getBoundingBox().inflate(range, range / 2, range))
                         .forEach(e -> Geryon.this.useSmashAttack(e));
                 // destroy nearby blocks
                 if (isBlockSmash) {
@@ -660,7 +663,7 @@ public class Geryon extends Monster implements HasCustomCooldown {
 
         @Override
         protected void onSummonMob(final MadCow mobEntity) {
-            Geryon.this.level.broadcastEntityEvent(Geryon.this, SUMMON_EVENT);
+            Geryon.this.level().broadcastEntityEvent(Geryon.this, SUMMON_EVENT);
         }
 
         @Override

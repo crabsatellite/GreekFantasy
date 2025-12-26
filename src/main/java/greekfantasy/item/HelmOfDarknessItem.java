@@ -23,7 +23,7 @@ public class HelmOfDarknessItem extends ArmorItem {
     private static final String TEXTURE = new ResourceLocation(GreekFantasy.MODID, "textures/models/armor/avernal_layer_1.png").toString();
 
     public HelmOfDarknessItem(final ArmorMaterial armorMaterial, Properties builderIn) {
-        super(armorMaterial, EquipmentSlot.HEAD, builderIn);
+        super(armorMaterial, ArmorItem.Type.HELMET, builderIn);
     }
 
     @Override

@@ -3,7 +3,8 @@ package greekfantasy.client.particle;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Vector3f;
+import org.joml.Vector3f;
+import com.mojang.math.Axis;
 import greekfantasy.client.entity.GorgonRenderer;
 import greekfantasy.client.entity.model.GorgonModel;
 import greekfantasy.entity.monster.Gorgon;
@@ -49,7 +50,7 @@ public class GorgonParticle extends Particle {
         PoseStack poseStack = new PoseStack();
 
         poseStack.mulPose(renderInfo.rotation());
-        poseStack.mulPose(Vector3f.XP.rotationDegrees(180.0F));
+        poseStack.mulPose(Axis.XP.rotationDegrees(180.0F));
 
         poseStack.scale(-1.0F, 1.0F, -1.0F);
         poseStack.translate(0.0D, 0.31D, 2.15D + 0.75F * zOffset);

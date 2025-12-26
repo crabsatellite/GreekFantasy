@@ -218,7 +218,7 @@ public class OliveOilBlock extends Block implements LiquidBlockContainer {
     public void entityInside(BlockState state, Level level, BlockPos pos, Entity entityIn) {
         if (state.getValue(LIT) && !entityIn.fireImmune()) {
             entityIn.setRemainingFireTicks(level.getRandom().nextInt(5) + 5);
-            entityIn.hurt(DamageSource.IN_FIRE, this.fireDamage);
+            entityIn.hurt(level.damageSources().inFire(), this.fireDamage);
         }
 
         super.entityInside(state, level, pos, entityIn);

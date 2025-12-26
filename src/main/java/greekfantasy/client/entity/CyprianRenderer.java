@@ -22,7 +22,7 @@ public class CyprianRenderer<T extends Cyprian> extends HumanoidMobRenderer<T, C
         BODY_TEXTURE_MAP.put(Variant.BROWN, new ResourceLocation(GreekFantasy.MODID, "textures/entity/cyprian/brown.png"));
         BODY_TEXTURE_MAP.put(Variant.CHESTNUT, new ResourceLocation(GreekFantasy.MODID, "textures/entity/cyprian/chestnut.png"));
         BODY_TEXTURE_MAP.put(Variant.CREAMY, new ResourceLocation(GreekFantasy.MODID, "textures/entity/cyprian/creamy.png"));
-        BODY_TEXTURE_MAP.put(Variant.DARKBROWN, new ResourceLocation(GreekFantasy.MODID, "textures/entity/cyprian/darkbrown.png"));
+        BODY_TEXTURE_MAP.put(Variant.DARK_BROWN, new ResourceLocation(GreekFantasy.MODID, "textures/entity/cyprian/darkbrown.png"));
         BODY_TEXTURE_MAP.put(Variant.GRAY, new ResourceLocation(GreekFantasy.MODID, "textures/entity/cyprian/gray.png"));
         BODY_TEXTURE_MAP.put(Variant.WHITE, new ResourceLocation(GreekFantasy.MODID, "textures/entity/cyprian/white.png"));
     }

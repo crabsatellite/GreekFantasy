@@ -1,4 +1,5 @@
 package greekfantasy.util;
+import net.minecraft.core.registries.Registries;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -16,7 +17,7 @@ import net.minecraftforge.common.world.StructureModifier;
 public class AddSpawnsStructureModifier implements StructureModifier {
 
     public static final Codec<AddSpawnsStructureModifier> CODEC = RecordCodecBuilder.create(builder -> builder.group(
-            RegistryCodecs.homogeneousList(Registry.STRUCTURE_REGISTRY, Structure.DIRECT_CODEC).fieldOf("structures").forGetter(AddSpawnsStructureModifier::getStructures),
+            RegistryCodecs.homogeneousList(Registries.STRUCTURE, Structure.DIRECT_CODEC).fieldOf("structures").forGetter(AddSpawnsStructureModifier::getStructures),
                   MobCategory.CODEC.fieldOf("category").forGetter(AddSpawnsStructureModifier::getCategory),
                   MobSpawnSettings.SpawnerData.CODEC.fieldOf("spawn").forGetter(AddSpawnsStructureModifier::getSpawn)
             ).apply(builder, AddSpawnsStructureModifier::new));

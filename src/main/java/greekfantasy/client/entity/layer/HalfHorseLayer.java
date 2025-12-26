@@ -25,7 +25,7 @@ public class HalfHorseLayer<T extends LivingEntity & HasHorseVariant, M extends 
         BODY_TEXTURES.put(Variant.BROWN, new ResourceLocation("minecraft", "textures/entity/horse/horse_brown.png"));
         BODY_TEXTURES.put(Variant.CHESTNUT, new ResourceLocation("minecraft", "textures/entity/horse/horse_chestnut.png"));
         BODY_TEXTURES.put(Variant.CREAMY, new ResourceLocation("minecraft", "textures/entity/horse/horse_creamy.png"));
-        BODY_TEXTURES.put(Variant.DARKBROWN, new ResourceLocation("minecraft", "textures/entity/horse/horse_darkbrown.png"));
+        BODY_TEXTURES.put(Variant.DARK_BROWN, new ResourceLocation("minecraft", "textures/entity/horse/horse_darkbrown.png"));
         BODY_TEXTURES.put(Variant.GRAY, new ResourceLocation("minecraft", "textures/entity/horse/horse_gray.png"));
         BODY_TEXTURES.put(Variant.WHITE, new ResourceLocation("minecraft", "textures/entity/horse/horse_white.png"));
     }
