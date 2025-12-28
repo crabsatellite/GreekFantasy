@@ -153,11 +153,11 @@ public class InstrumentScreen extends Screen {
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
         if (songsVisible && mouseX < this.x - RADIAL_WIDTH - SONG_RADIAL_MARGIN) {
             // attempt to scroll song menu
-            float scrollAmount = Mth.clamp(
+            float newScrollAmount = Mth.clamp(
                     this.scrollAmount - (float) amount * (1.0F / Math.max(1, this.songs.size() - VISIBLE_SONG_COUNT)),
                     0.0F, 1.0F);
-            setSongScrollAmount(scrollAmount);
-            scrollButton.setScrollAmount(scrollAmount);
+            setSongScrollAmount(newScrollAmount);
+            scrollButton.setScrollAmount(newScrollAmount);
         } else {
             // attempt to scroll radial menu
             setGroup((int) (this.group + amount));

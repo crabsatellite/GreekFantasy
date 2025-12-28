@@ -154,6 +154,7 @@ public class Pegasus extends AbstractHorse implements FlyingAnimal, HasHorseVari
     }
 
     @Nullable
+    @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor worldIn, DifficultyInstance difficulty,
             MobSpawnType mobSpawnType,
             @Nullable SpawnGroupData spawnDataIn, @Nullable CompoundTag dataTag) {
